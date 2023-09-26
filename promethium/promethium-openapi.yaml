@@ -1,0 +1,2980 @@
+openapi: 3.0.2
+info:
+  title: Promethium REST API
+  version: 0.1.0
+  license:
+    name: QC Ware Terms of Service
+    url: https://www.promethium.qcware.com/terms-conditions
+  contact:
+    name: QC Ware Corp
+    email: promethium@qcware.com
+    url: https://promethium.qcware.com
+servers:
+  - url: https://api.promethium.qcware.com
+security:
+  - ApiKeyAuth: []
+paths:
+  /v0/workflows:
+    get:
+      tags:
+        - Workflows
+      summary: List Workflows
+      description: Gets a list of workflows that match the query filters in the given order
+      operationId: list_workflows
+      parameters:
+        - description: The type of workflow; can be one of ['TorsionScan', 'ConformerSearch', 'SinglePointCalculation', 'GeometryOptimization', 'InteractionEnergyCalculation', 'ReactionPathOptimization', 'TransitionStateOptimization', 'TransitionStateOptimizationFromEndpoints']
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WorkflowKind'
+            description: The type of workflow; can be one of ['TorsionScan', 'ConformerSearch', 'SinglePointCalculation', 'GeometryOptimization', 'InteractionEnergyCalculation', 'ReactionPathOptimization', 'TransitionStateOptimization', 'TransitionStateOptimizationFromEndpoints']
+          name: kind
+          in: query
+        - required: false
+          schema:
+            title: Search
+            type: string
+          name: search
+          in: query
+        - required: false
+          schema:
+            title: User Id
+            type: string
+          name: user_id
+          in: query
+        - description: The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WorkflowStatus'
+            description: The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']
+            default: []
+          name: status
+          in: query
+        - required: false
+          schema:
+            title: Started Before
+            type: string
+            format: date-time
+          name: started_before
+          in: query
+        - required: false
+          schema:
+            title: Started After
+            type: string
+            format: date-time
+          name: started_after
+          in: query
+        - required: false
+          schema:
+            title: Stopped Before
+            type: string
+            format: date-time
+          name: stopped_before
+          in: query
+        - required: false
+          schema:
+            title: Stopped After
+            type: string
+            format: date-time
+          name: stopped_after
+          in: query
+        - description: The workflow field to order by. Can be one of ['id', 'name', 'kind', 'created_at', 'last_updated_at', 'started_at', 'stopped_at', 'status']. The default is created_at.
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WorkflowOrderField'
+            description: The workflow field to order by. Can be one of ['id', 'name', 'kind', 'created_at', 'last_updated_at', 'started_at', 'stopped_at', 'status']. The default is created_at.
+            default: created_at
+          name: order_by
+          in: query
+        - description: Can be one of asc and desc.
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OrderDir'
+            description: Can be one of asc and desc.
+            default: desc
+          name: order_dir
+          in: query
+        - required: false
+          schema:
+            title: Page
+            minimum: 1
+            type: integer
+            default: 1
+          name: page
+          in: query
+        - required: false
+          schema:
+            title: Size
+            maximum: 1000
+            minimum: 1
+            type: integer
+            default: 100
+          name: size
+          in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_Workflow_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Workflows
+      summary: Create Workflow
+      description: Create a new workflow
+      operationId: create_workflow
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: Request Input
+              oneOf:
+                - $ref: '#/components/schemas/CreateConformerSearchWorkflowRequest'
+                - $ref: '#/components/schemas/CreateGeometryOptimizationWorkflowRequest'
+                - $ref: '#/components/schemas/CreateInteractionEnergyCalculationWorkflowRequest'
+                - $ref: '#/components/schemas/CreateReactionPathOptimizationWorkflowRequest'
+                - $ref: '#/components/schemas/CreateSinglePointCalculationWorkflowRequest'
+                - $ref: '#/components/schemas/CreateTorsionScanWorkflowRequest'
+                - $ref: '#/components/schemas/CreateTransitionStateOptimizationWorkflowRequest'
+                - $ref: '#/components/schemas/CreateTransitionStateOptimizationFromEndpointsWorkflowRequest'
+              discriminator:
+                propertyName: kind
+                mapping:
+                  ConformerSearch: '#/components/schemas/CreateConformerSearchWorkflowRequest'
+                  GeometryOptimization: '#/components/schemas/CreateGeometryOptimizationWorkflowRequest'
+                  InteractionEnergyCalculation: '#/components/schemas/CreateInteractionEnergyCalculationWorkflowRequest'
+                  ReactionPathOptimization: '#/components/schemas/CreateReactionPathOptimizationWorkflowRequest'
+                  SinglePointCalculation: '#/components/schemas/CreateSinglePointCalculationWorkflowRequest'
+                  TorsionScan: '#/components/schemas/CreateTorsionScanWorkflowRequest'
+                  TransitionStateOptimization: '#/components/schemas/CreateTransitionStateOptimizationWorkflowRequest'
+                  TransitionStateOptimizationFromEndpoints: '#/components/schemas/CreateTransitionStateOptimizationFromEndpointsWorkflowRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/workflows/{workflow_id}:
+    get:
+      tags:
+        - Workflows
+      summary: Get Workflow
+      description: Gets the workflow with the given id
+      operationId: get_workflow
+      parameters:
+        - required: true
+          schema:
+            title: Workflow Id
+            type: string
+            format: uuid4
+          name: workflow_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Workflows
+      summary: Delete Workflow
+      description: Deletes the workflow with the given id.
+      operationId: delete_workflow
+      parameters:
+        - required: true
+          schema:
+            title: Workflow Id
+            type: string
+            format: uuid4
+          name: workflow_id
+          in: path
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/workflows/{workflow_id}/stop:
+    post:
+      tags:
+        - Workflows
+      summary: Stop Workflow
+      description: Stops the workflow with the given id.
+      operationId: stop_workflow
+      parameters:
+        - required: true
+          schema:
+            title: Workflow Id
+            type: string
+            format: uuid4
+          name: workflow_id
+          in: path
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/workflows/{workflow_id}/results:
+    get:
+      tags:
+        - Workflows
+      summary: Get Workflow Results Numeric
+      operationId: get_workflow_results_numeric
+      parameters:
+        - required: true
+          schema:
+            title: Workflow Id
+            type: string
+            format: uuid4
+          name: workflow_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowNumericResults'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/workflows/{workflow_id}/results/download:
+    get:
+      tags:
+        - Workflows
+      summary: Download Results
+      description: Redirects to an ephemeral, secured download URL with a zip file containing the workflow results.
+      operationId: download_results
+      parameters:
+        - required: true
+          schema:
+            title: Workflow Id
+            type: string
+            format: uuid4
+          name: workflow_id
+          in: path
+      responses:
+        '302':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/files/{file_id}:
+    get:
+      tags:
+        - Files
+      summary: Get File
+      description: Get the data for the file/folder with the given id
+      operationId: get_file
+      parameters:
+        - required: true
+          schema:
+            title: File Id
+            type: string
+            format: uuid4
+          name: file_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Files
+      summary: Delete File
+      description: Deletes an existing file or directory and its contents.
+      operationId: delete_file
+      parameters:
+        - required: true
+          schema:
+            title: File Id
+            type: string
+            format: uuid4
+          name: file_id
+          in: path
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+        - Files
+      summary: Update File
+      description: Partially update the file/directory, effectively moving it from one parent to another.
+      operationId: update_file
+      parameters:
+        - required: true
+          schema:
+            title: File Id
+            type: string
+            format: uuid4
+          name: file_id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFileRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/files:
+    get:
+      tags:
+        - Files
+      summary: List Files
+      description: List the metadata for the files that match the query filters
+      operationId: list_files
+      parameters:
+        - description: If specified, only files directly under the parent directories are retrieved. Otherwise, all files in the file system.
+          required: false
+          schema:
+            title: Parent Id
+            type: string
+            description: If specified, only files directly under the parent directories are retrieved. Otherwise, all files in the file system.
+            format: uuid4
+          name: parent_id
+          in: query
+        - description: If specified, the results are filtered to all files containing the given search string.
+          required: false
+          schema:
+            title: Search
+            type: string
+            description: If specified, the results are filtered to all files containing the given search string.
+          name: search
+          in: query
+        - required: false
+          schema:
+            title: Page
+            minimum: 1
+            type: integer
+            default: 1
+          name: page
+          in: query
+        - required: false
+          schema:
+            title: Size
+            maximum: 1000
+            minimum: 1
+            type: integer
+            default: 100
+          name: size
+          in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_FileMetadata_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Files
+      summary: Create File
+      description: Creates a new file or directory
+      operationId: create_file
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: Request Input
+              anyOf:
+                - $ref: '#/components/schemas/CreateSimpleFileRequest'
+                - $ref: '#/components/schemas/CreateDirectoryRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/files/{file_id}/download:
+    get:
+      tags:
+        - Files
+      summary: Download File
+      description: Redirects to an ephemeral, secured download URL. For directories, this will create a zip file of the directory contents.
+      operationId: download_file
+      parameters:
+        - required: true
+          schema:
+            title: File Id
+            type: string
+            format: uuid4
+          name: file_id
+          in: path
+      responses:
+        '302':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v0/files/batch:
+    post:
+      tags:
+        - Files
+      summary: Create File Batch
+      description: Creates a batch of new files and/or directories
+      operationId: create_file_batch
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: Request Input
+              type: array
+              items:
+                anyOf:
+                  - $ref: '#/components/schemas/CreateSimpleFileRequest'
+                  - $ref: '#/components/schemas/CreateDirectoryRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Create File Batch
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileMetadata'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    WorkflowKind:
+      title: WorkflowKind
+      enum:
+        - TorsionScan
+        - ConformerSearch
+        - SinglePointCalculation
+        - GeometryOptimization
+        - InteractionEnergyCalculation
+        - ReactionPathOptimization
+        - TransitionStateOptimization
+        - TransitionStateOptimizationFromEndpoints
+      type: string
+      description: An enumeration.
+    WorkflowStatus:
+      title: WorkflowStatus
+      enum:
+        - CANCELED
+        - COMPLETED
+        - FAILED
+        - RUNNING
+        - TERMINATED
+        - TIMED_OUT
+      type: string
+      description: Possible state values used in workflows
+    WorkflowOrderField:
+      title: WorkflowOrderField
+      enum:
+        - id
+        - name
+        - kind
+        - created_at
+        - last_updated_at
+        - started_at
+        - stopped_at
+        - status
+      type: string
+      description: An enumeration.
+    OrderDir:
+      title: OrderDir
+      enum:
+        - asc
+        - desc
+      type: string
+      description: An enumeration.
+    GpuType:
+      title: GpuType
+      enum:
+        - a100
+        - v100
+      type: string
+      description: The classes of computing units supported in Promethium
+    ResourceRequest:
+      title: ResourceRequest
+      required:
+        - gpu_type
+      type: object
+      properties:
+        gpu_type:
+          allOf:
+            - $ref: '#/components/schemas/GpuType'
+          description: The class of GPU used to run the workflow; can be one of ['a100', 'v100']
+        gpu_count:
+          title: Gpu Count
+          type: integer
+          description: The number of GPU units used to run the workflow
+          default: 1
+      additionalProperties: false
+    Workflow:
+      title: Workflow
+      required:
+        - id
+        - name
+        - kind
+        - created_at
+        - last_updated_at
+        - status
+        - duration_seconds
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        id:
+          title: Id
+          type: string
+          description: The unique id of the workflow
+          format: uuid4
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          allOf:
+            - $ref: '#/components/schemas/WorkflowKind'
+          description: The type of workflow; can be one of ['TorsionScan', 'ConformerSearch', 'SinglePointCalculation', 'GeometryOptimization', 'InteractionEnergyCalculation', 'ReactionPathOptimization', 'TransitionStateOptimization', 'TransitionStateOptimizationFromEndpoints']
+        created_at:
+          title: Created At
+          type: string
+          description: The creation date of the workflow
+          format: date-time
+        last_updated_at:
+          title: Last Updated At
+          type: string
+          description: The last update date of the workflow
+          format: date-time
+        started_at:
+          title: Started At
+          type: string
+          description: The date when the workflow started
+          format: date-time
+        stopped_at:
+          title: Stopped At
+          type: string
+          description: The date when the workflow stopped
+          format: date-time
+        status:
+          allOf:
+            - $ref: '#/components/schemas/WorkflowStatus'
+          description: The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']
+        duration_seconds:
+          title: Duration Seconds
+          type: number
+          description: The running time in seconds of the workflow
+        parameters:
+          title: Parameters
+          type: object
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    Page_Workflow_:
+      title: Page[Workflow]
+      required:
+        - items
+        - total
+        - page
+        - size
+      type: object
+      properties:
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/Workflow'
+        total:
+          title: Total
+          minimum: 0
+          type: integer
+        page:
+          title: Page
+          minimum: 1
+          type: integer
+        size:
+          title: Size
+          minimum: 1
+          type: integer
+    ValidationError:
+      title: ValidationError
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidFileExtensions:
+      title: ValidFileExtensions
+      enum:
+        - xyz
+        - mol
+        - sdf
+        - pdb
+        - smi
+      type: string
+      description: An enumeration.
+    MoleculeInput:
+      title: MoleculeInput
+      type: object
+      properties:
+        filename:
+          title: Filename
+          type: string
+        base64data:
+          title: Base64Data
+          type: string
+        id:
+          title: Id
+          type: string
+          format: uuid4
+        filetype:
+          $ref: '#/components/schemas/ValidFileExtensions'
+    ConformerSearchParams:
+      title: ConformerSearchParams
+      type: object
+      properties:
+        charge:
+          title: Charge
+          type: integer
+          description: Set the charge of molecule
+        multiplicity:
+          title: Multiplicity
+          type: integer
+          description: Multiplicity (2S + 1) of the electronic state
+        max_filter_jobs:
+          title: Max Filter Jobs
+          type: integer
+          description: Maximum number of filter nodes for parallelization
+        confgen:
+          title: Confgen
+          type: boolean
+          description: Generate initial conformers using RDKits ETKG method
+        confgen_max_n_conformers:
+          title: Confgen Max N Conformers
+          type: integer
+          description: Number of initial conformers using RDKits ETKG method
+        confgen_rmsd_threshold:
+          title: Confgen Rmsd Threshold
+          type: number
+          description: RMSD threshold for conformer pruning after RDKits ETKG method
+      additionalProperties: false
+    FilterType:
+      title: FilterType
+      enum:
+        - ForceField
+        - ANI
+        - DFT
+      type: string
+      description: An enumeration.
+    ForceFieldType:
+      title: ForceFieldType
+      enum:
+        - UFF
+        - MMFF
+        - SAGE
+      type: string
+      description: An enumeration.
+    ANIFilterMethod:
+      title: ANIFilterMethod
+      enum:
+        - GFN-FF
+        - GFN2-xTB
+        - ANI-2x
+      type: string
+      description: An enumeration.
+    ANIFilterSolvent:
+      title: ANIFilterSolvent
+      enum:
+        - none
+        - acetone
+        - acetonitrile
+        - benzene
+        - ch2cl2
+        - chloroform
+        - cs2
+        - dmf
+        - dmso
+        - ether
+        - water
+        - methanol
+        - n-hexane
+        - thf
+        - toluene
+      type: string
+      description: An enumeration.
+    ConformerSearchFilterParams:
+      title: ConformerSearchFilterParams
+      type: object
+      properties:
+        forcefield_type:
+          allOf:
+            - $ref: '#/components/schemas/ForceFieldType'
+          description: Force Field used to optimize conformers
+        rmsd_threshold:
+          title: Rmsd Threshold
+          type: number
+          description: RMSD threshold for conformer pruning after FF opt
+        coulomb_distance_threshold:
+          title: Coulomb Distance Threshold
+          type: number
+          description: Threshold of Coulomb matrix norm for conformer pruning after FF opt
+        tdf_threshold:
+          title: Tdf Threshold
+          type: number
+          description: TDF threshold for conformer pruning
+        soap_threshold:
+          title: Soap Threshold
+          type: number
+          description: SOAP distance threshold for conformer pruning
+        method:
+          allOf:
+            - $ref: '#/components/schemas/ANIFilterMethod'
+          description: 'Supported methods are: GFN-FF, GFN2-xTB and ANI-2x'
+        solvent:
+          allOf:
+            - $ref: '#/components/schemas/ANIFilterSolvent'
+          description: Solvent for the GFN methods
+        max_n_conformers:
+          title: Max N Conformers
+          type: integer
+          description: Maximum number of Conformers for the DFT opt
+        energy_threshold:
+          title: Energy Threshold
+          type: number
+          description: Energy cut-off for pruning in kcal/mol
+        distance_threshold:
+          title: Distance Threshold
+          type: number
+          description: Distance threshold for pruning (SOAP)
+        do_geometry_optimization:
+          title: Do Geometry Optimization
+          type: boolean
+          description: Turn on geomtry optimzation
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of steps in the geometry optimzation
+        g_thresh:
+          title: G Thresh
+          type: number
+          description: Gradient threshold for geometry optimzation
+      additionalProperties: false
+    D3Type:
+      title: D3Type
+      enum:
+        - d3
+        - d3m
+        - bj
+        - bjm
+      type: string
+      description: An enumeration.
+    GridOrientationScheme:
+      title: GridOrientationScheme
+      enum:
+        - lab
+        - global
+        - local
+      type: string
+      description: An enumeration.
+    GridScheme:
+      title: GridScheme
+      enum:
+        - SG0
+        - SG1
+        - SG2
+        - SG3
+        - GRID1
+        - GRID2
+        - GRID3
+        - GRID4
+        - GRID5
+      type: string
+      description: An enumeration.
+    SystemParams:
+      title: SystemParams
+      type: object
+      properties:
+        basis_is_spherical:
+          title: Basis Is Spherical
+          type: boolean
+          description: Is the basis set spherical, cartesian, or as-specified in the GBS file
+        basisname:
+          title: Basisname
+          type: string
+          description: Name of the primary Gaussian basis set for this system
+        d3_type:
+          allOf:
+            - $ref: '#/components/schemas/D3Type'
+          description: Type of D3 correction to apply
+        do_atm:
+          title: Do Atm
+          type: boolean
+          description: DFTD3 three-body (ATM) term
+        ecp_grid_potential_cutoff:
+          title: Ecp Grid Potential Cutoff
+          type: number
+          description: Cutoff for ECP potential to determined ECP grid radial extent
+        ecp_grid_radial_npoint:
+          title: Ecp Grid Radial Npoint
+          type: integer
+          description: Number of radial nodes in ECP grid Gauss-Legendre quadrature
+        ecp_grid_spherical_npoint:
+          title: Ecp Grid Spherical Npoint
+          type: integer
+          description: Number of spherical nodes in ECP grid Lebedev quadrature
+        gauss_hermite_pack_max_npoint:
+          title: Gauss Hermite Pack Max Npoint
+          type: integer
+          description: Maximum number of Gauss-Hermite quadrature points in Tables
+        jkfit_basisname:
+          title: Jkfit Basisname
+          type: string
+          description: Name of the DF-J and/or DF-K auxiliary basis for this system
+        k_grid_R_cutoff:
+          title: K Grid R Cutoff
+          type: number
+          description: Radial grid cutoff for Becke grid construction (< 0.0 indicates no cutoff) for THC-wK
+        k_grid_orientation_denominator_cutoff:
+          title: K Grid Orientation Denominator Cutoff
+          type: number
+          description: Cutoff for inertial tensor denominators in orientation response equations for THC-wK
+        k_grid_orientation_e:
+          title: K Grid Orientation E
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff for THC-wK
+        k_grid_orientation_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridOrientationScheme'
+          description: Scheme for Becke grid orientation for THC-wK
+        k_grid_orientation_w:
+          title: K Grid Orientation W
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff for THC-wK
+        k_grid_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridScheme'
+          description: Named grid scheme for manual grid construction for THC-wK
+        methodname:
+          title: Methodname
+          type: string
+          description: Method name, including XC, -D3, etc.
+        minao_basisname:
+          title: Minao Basisname
+          type: string
+          description: Name of the MinAO basis set for this system
+        pcm_bondi_radial_scale:
+          title: Pcm Bondi Radial Scale
+          type: number
+          description: PCM scale of Bondi radii used to construct PCM Lebedev cavity
+        pcm_convergence:
+          title: Pcm Convergence
+          type: number
+          description: Maximum allowed element in the charge update at PCM convergence
+        pcm_cutoff:
+          title: Pcm Cutoff
+          type: number
+          description: Tolerance for neglecting PCM charges with small switch function weights
+        pcm_epsilon:
+          title: Pcm Epsilon
+          type: number
+          description: PCM dielectric constant epsilon
+        pcm_k:
+          title: Pcm K
+          type: number
+          description: PCM denominator correction, used in f = (epsilon - 1.0) / (epsilon + k)
+        pcm_maxiter:
+          title: Pcm Maxiter
+          type: integer
+          description: Maximum number of PCM iterations before convergence failure
+        pcm_print_level:
+          title: Pcm Print Level
+          type: integer
+          description: Level of detail to print
+        pcm_spherical_npoint:
+          title: Pcm Spherical Npoint
+          type: integer
+          description: PCM number of Lebedev points per atom
+        threshold_pq:
+          title: Threshold Pq
+          type: number
+          description: Pair cutoff threshold for (pq| functions
+        vv10_grid_R_cutoff:
+          title: Vv10 Grid R Cutoff
+          type: number
+          description: Radial grid cutoff for Becke grid construction for VV10
+        vv10_grid_orientation_denominator_cutoff:
+          title: Vv10 Grid Orientation Denominator Cutoff
+          type: number
+          description: Cutoff for inertial tensor denominators in orientation response equations for VV10
+        vv10_grid_orientation_e:
+          title: Vv10 Grid Orientation E
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff for VV10
+        vv10_grid_orientation_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridOrientationScheme'
+          description: Scheme for Becke grid orientation for VV10
+        vv10_grid_orientation_w:
+          title: Vv10 Grid Orientation W
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff for VV10
+        vv10_grid_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridScheme'
+          description: Named grid scheme for manual grid construction for VV10
+        xc_functional_name:
+          title: Xc Functional Name
+          type: string
+          description: XC functional name for this system
+        xc_grid_R_cutoff:
+          title: Xc Grid R Cutoff
+          type: number
+          description: Radial grid cutoff for Becke grid construction
+        xc_grid_orientation_denominator_cutoff:
+          title: Xc Grid Orientation Denominator Cutoff
+          type: number
+          description: Cutoff for inertial tensor denominators in orientation response equations for Becke grid
+        xc_grid_orientation_e:
+          title: Xc Grid Orientation E
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff
+        xc_grid_orientation_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridOrientationScheme'
+          description: Scheme for Becke grid orientation
+        xc_grid_orientation_w:
+          title: Xc Grid Orientation W
+          type: array
+          items:
+            type: number
+          description: Gaussian exponents in bohr**(-2) for local Becke grid orientation cutoff
+        xc_grid_scheme:
+          allOf:
+            - $ref: '#/components/schemas/GridScheme'
+          description: Named grid scheme for manual grid construction
+        yuge_exponent:
+          title: Yuge Exponent
+          type: number
+          description: Massive exponent used in a normalized Gaussian density function to approximate a nuclear density
+      additionalProperties: false
+    System:
+      title: System
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/SystemParams'
+    Gradient3IndexTensorScheme:
+      title: Gradient3IndexTensorScheme
+      enum:
+        - delete
+        - cache
+        - duplicate
+      type: string
+      description: An enumeration.
+    PMEKernelAlgorithm:
+      title: PMEKernelAlgorithm
+      enum:
+        - spherical
+        - cartesian_v1
+        - cartesian_v2
+      type: string
+      description: An enumeration.
+    JkBuilderParams:
+      title: JkBuilderParams
+      type: object
+      properties:
+        df_j_metric_pseudoinverse_cutoff:
+          title: Df J Metric Pseudoinverse Cutoff
+          type: number
+          description: Eigenvalue cutoff for DF-J metric pseudoinverse_sqrt
+        gradient_3index_tensor_scheme:
+          allOf:
+            - $ref: '#/components/schemas/Gradient3IndexTensorScheme'
+          description: Scheme for major 3-index tensor storage during gradient computation
+        lrc_cutoff:
+          title: Lrc Cutoff
+          type: number
+          description: Eigenvalue cutoff for DF-wK sqrt
+        memory:
+          title: Memory
+          type: number
+          description: Scratch memory in bytes to use beyond compressed 3-index tensor
+        pme_cartesian_a_star_1:
+          title: Pme Cartesian A Star 1
+          type: number
+          description: Crossover to asymptotic formula for Gauss-Legendre part of Cartesian Coulomb kernel
+        pme_cartesian_a_star_2:
+          title: Pme Cartesian A Star 2
+          type: number
+          description: Crossover to asymptotic formula for cerf part of Cartesian Coulomb kernel
+        pme_cartesian_mmultiplier:
+          title: Pme Cartesian Mmultiplier
+          type: integer
+          description: FFT grid size multiplier in cerf part of Cartesian Coulomb kernel
+        pme_cartesian_npoint:
+          title: Pme Cartesian Npoint
+          type: integer
+          description: Number of Gauss-Legendre quadrature points in Cartesian Coulomb kernel
+        pme_cartesian_optimize_fft:
+          title: Pme Cartesian Optimize Fft
+          type: boolean
+          description: Optimize FFT grid sizes in cartesian Coulomb kernel?
+        pme_cutoff:
+          title: Pme Cutoff
+          type: number
+          description: PME cutoff for Gaussian FFT grid representation
+        pme_grid_power:
+          title: Pme Grid Power
+          type: number
+          description: PME multigrid power law scaling
+        pme_grid_spacing:
+          title: Pme Grid Spacing
+          type: number
+          description: PME grid spacing in au
+        pme_kernel_algorithm:
+          allOf:
+            - $ref: '#/components/schemas/PMEKernelAlgorithm'
+          description: PME kernel algorithm
+        pme_spherical_optimize_fft:
+          title: Pme Spherical Optimize Fft
+          type: boolean
+          description: Optimize FFT grid sizes in spherical Coulomb kernel?
+        pme_sr_cutoff:
+          title: Pme Sr Cutoff
+          type: number
+          description: PME cutoff for short-range correction
+        threshold_k_collocation:
+          title: Threshold K Collocation
+          type: number
+          description: Cutoff for exchange collocation in orbital basis
+      additionalProperties: false
+    JkBuilder:
+      title: JkBuilder
+      type: object
+      properties:
+        type:
+          title: Type
+          type: string
+          default: core_dfjk
+        params:
+          $ref: '#/components/schemas/JkBuilderParams'
+    XcEngine:
+      title: XcEngine
+      enum:
+        - default
+        - libxc
+        - tachyon
+        - xcfun
+      type: string
+      description: An enumeration.
+    XcBuilderParams:
+      title: XcBuilderParams
+      type: object
+      properties:
+        threshold_xc_collocation:
+          title: Threshold Xc Collocation
+          type: number
+          description: Cutoff for density collocation in orbital basis
+        xc_engine:
+          allOf:
+            - $ref: '#/components/schemas/XcEngine'
+          description: Engine to use for XC evaluation
+      additionalProperties: false
+    XcBuilder:
+      title: XcBuilder
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/XcBuilderParams'
+    EstParams:
+      title: EstParams
+      type: object
+      properties:
+        threshold_ecp:
+          title: Threshold Ecp
+          type: number
+          description: Cutoff for ECP orbital collocation
+      additionalProperties: false
+    Est:
+      title: Est
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/EstParams'
+    DIISStoragePolicy:
+      title: DIISStoragePolicy
+      enum:
+        - gpu
+        - cpu
+      type: string
+      description: An enumeration.
+    OrthogonalizationScheme:
+      title: OrthogonalizationScheme
+      enum:
+        - canonical
+        - cholesky
+        - symmetric
+      type: string
+      description: An enumeration.
+    HfBaseParams:
+      title: HfBaseParams
+      type: object
+      properties:
+        cpscf_convergence:
+          title: Cpscf Convergence
+          type: number
+          description: Maximum allowed element in the residual at CPSCF convergence
+        cpscf_maxiter:
+          title: Cpscf Maxiter
+          type: integer
+          description: Maximum number of CPSCF iterations before convergence failure
+        diis_flush_niter:
+          title: Diis Flush Niter
+          type: integer
+          description: Number of SCF iterations between flushes of DIIS object
+        diis_max_nvector:
+          title: Diis Max Nvector
+          type: integer
+          description: Maximum number of vectors in the DIIS history
+        diis_storage_policy:
+          allOf:
+            - $ref: '#/components/schemas/DIISStoragePolicy'
+          description: DIIS storage policy
+        g_convergence:
+          title: G Convergence
+          type: number
+          description: Maximum allowed element in the orbital gradient at SCF convergence
+        level_shift_alpha:
+          title: Level Shift Alpha
+          type: number
+          description: Level shift parameter for the alpha orbitals to stabilize convergence
+        level_shift_beta:
+          title: Level Shift Beta
+          type: number
+          description: Level shift parameter for the beta orbitals to stabilize convergence
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of SCF iterations before convergence failure
+        nalpha:
+          title: Nalpha
+          type: integer
+          description: The number of alpha electrons
+        nbeta:
+          title: Nbeta
+          type: integer
+          description: The number of beta electrons
+        npair:
+          title: Npair
+          type: integer
+          description: Total number of electron pairs
+        orthogonalization_scheme:
+          allOf:
+            - $ref: '#/components/schemas/OrthogonalizationScheme'
+          description: Atomic orbital orthogonalization scheme
+        print_gradient_details:
+          title: Print Gradient Details
+          type: boolean
+          description: Print details of SCF gradient?
+        print_gradient_timings:
+          title: Print Gradient Timings
+          type: boolean
+          description: Print timings at end of SCF gradient computation?
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        print_quote:
+          title: Print Quote
+          type: boolean
+          description: Print quote at end of SCF iterations?
+        print_timings:
+          title: Print Timings
+          type: boolean
+          description: Print timings at end of SCF iterations?
+        threshold_canonical_orthogonalization:
+          title: Threshold Canonical Orthogonalization
+          type: number
+          description: Canonical orthogonalization eigenvalue threshold
+      additionalProperties: false
+    FilterHf:
+      title: FilterHf
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/HfBaseParams'
+    ConformerSearchFilter:
+      title: ConformerSearchFilter
+      required:
+        - filtertype
+      type: object
+      properties:
+        filtertype:
+          $ref: '#/components/schemas/FilterType'
+        params:
+          $ref: '#/components/schemas/ConformerSearchFilterParams'
+        system:
+          $ref: '#/components/schemas/System'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        est:
+          $ref: '#/components/schemas/Est'
+        hf:
+          $ref: '#/components/schemas/FilterHf'
+    ConformerSearchInitializationInputSpec:
+      title: ConformerSearchInitializationInputSpec
+      required:
+        - molecule
+        - params
+        - filters
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeInput'
+        params:
+          $ref: '#/components/schemas/ConformerSearchParams'
+        filters:
+          title: Filters
+          type: array
+          items:
+            $ref: '#/components/schemas/ConformerSearchFilter'
+    CreateConformerSearchWorkflowRequest:
+      title: CreateConformerSearchWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - ConformerSearch
+          type: string
+          default: ConformerSearch
+        parameters:
+          $ref: '#/components/schemas/ConformerSearchInitializationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    HfParams:
+      title: HfParams
+      required:
+        - multiplicity
+      type: object
+      properties:
+        cpscf_convergence:
+          title: Cpscf Convergence
+          type: number
+          description: Maximum allowed element in the residual at CPSCF convergence
+        cpscf_maxiter:
+          title: Cpscf Maxiter
+          type: integer
+          description: Maximum number of CPSCF iterations before convergence failure
+        diis_flush_niter:
+          title: Diis Flush Niter
+          type: integer
+          description: Number of SCF iterations between flushes of DIIS object
+        diis_max_nvector:
+          title: Diis Max Nvector
+          type: integer
+          description: Maximum number of vectors in the DIIS history
+        diis_storage_policy:
+          allOf:
+            - $ref: '#/components/schemas/DIISStoragePolicy'
+          description: DIIS storage policy
+        g_convergence:
+          title: G Convergence
+          type: number
+          description: Maximum allowed element in the orbital gradient at SCF convergence
+        level_shift_alpha:
+          title: Level Shift Alpha
+          type: number
+          description: Level shift parameter for the alpha orbitals to stabilize convergence
+        level_shift_beta:
+          title: Level Shift Beta
+          type: number
+          description: Level shift parameter for the beta orbitals to stabilize convergence
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of SCF iterations before convergence failure
+        nalpha:
+          title: Nalpha
+          type: integer
+          description: The number of alpha electrons
+        nbeta:
+          title: Nbeta
+          type: integer
+          description: The number of beta electrons
+        npair:
+          title: Npair
+          type: integer
+          description: Total number of electron pairs
+        orthogonalization_scheme:
+          allOf:
+            - $ref: '#/components/schemas/OrthogonalizationScheme'
+          description: Atomic orbital orthogonalization scheme
+        print_gradient_details:
+          title: Print Gradient Details
+          type: boolean
+          description: Print details of SCF gradient?
+        print_gradient_timings:
+          title: Print Gradient Timings
+          type: boolean
+          description: Print timings at end of SCF gradient computation?
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        print_quote:
+          title: Print Quote
+          type: boolean
+          description: Print quote at end of SCF iterations?
+        print_timings:
+          title: Print Timings
+          type: boolean
+          description: Print timings at end of SCF iterations?
+        threshold_canonical_orthogonalization:
+          title: Threshold Canonical Orthogonalization
+          type: number
+          description: Canonical orthogonalization eigenvalue threshold
+        charge:
+          title: Charge
+          type: integer
+          description: Total molecular charge (Z - 2 * npair)
+        multiplicity:
+          title: Multiplicity
+          type: integer
+          description: Multiplicity (2S + 1) of the electronic state
+      additionalProperties: false
+    HfOutputs:
+      title: HfOutputs
+      type: object
+      properties:
+        dipole_derivative:
+          title: Dipole Derivative
+          type: boolean
+          description: Compute dipole derivative?
+          default: false
+        gradient:
+          title: Gradient
+          type: boolean
+          description: Compute gradient?
+          default: false
+        polarizability:
+          title: Polarizability
+          type: boolean
+          description: Compute polarizability?
+          default: false
+    Hf:
+      title: Hf
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/HfParams'
+        outputs:
+          $ref: '#/components/schemas/HfOutputs'
+    RcisParams:
+      title: RcisParams
+      type: object
+      properties:
+        S_inds:
+          title: S Inds
+          type: array
+          items:
+            type: integer
+          description: List of spin indices
+        S_nstates:
+          title: S Nstates
+          type: array
+          items:
+            type: integer
+          description: List of number of states requested in each spin index
+        gradient_target:
+          title: Gradient Target
+          type: integer
+          description: What state should be used in gradient calculations
+        gradient_target_spin:
+          title: Gradient Target Spin
+          type: integer
+          description: Spin of the state to be used in gradient calculations
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of Davidson iterations
+        nguess_per_root:
+          title: Nguess Per Root
+          type: integer
+          description: Number of guess vectors to use per desired root
+        nmax:
+          title: Nmax
+          type: integer
+          description: Maximum Davidson subspace size
+        norm_cutoff:
+          title: Norm Cutoff
+          type: number
+          description: Davidson conditioning cutoff
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        r_convergence:
+          title: R Convergence
+          type: number
+          description: Davidson convergence criterion
+      additionalProperties: false
+    RcisOutputs:
+      title: RcisOutputs
+      type: object
+      properties:
+        gradient:
+          title: Gradient
+          type: boolean
+          description: Compute gradient?
+          default: false
+    Rcis:
+      title: Rcis
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/RcisParams'
+        outputs:
+          $ref: '#/components/schemas/RcisOutputs'
+    CoordinateSystemName:
+      title: CoordinateSystemName
+      enum:
+        - redundant
+        - cartesian
+        - hybrid
+      type: string
+      description: An enumeration.
+    PesParams:
+      title: PesParams
+      type: object
+      properties:
+        colinear_threshold:
+          title: Colinear Threshold
+          type: number
+          description: Threshold in determining colinearity of cartesian constraints
+        constraint_maxiter:
+          title: Constraint Maxiter
+          type: integer
+          description: Maximum number of iterations to satisfy the constraints
+        constraint_tolerance:
+          title: Constraint Tolerance
+          type: number
+          description: How tightly do the constraints need to be satisfied
+        constraints:
+          title: Constraints
+          type: array
+          items:
+            type: object
+          description: List of coordinates to constrain during optimization
+        coordinate_system_name:
+          allOf:
+            - $ref: '#/components/schemas/CoordinateSystemName'
+          description: Method for calculating energies and gradients
+        coordinate_transformation_maxiter:
+          title: Coordinate Transformation Maxiter
+          type: integer
+          description: Maximum number of iterations in the internal coordinate transformation
+        coordinate_transformation_thresh:
+          title: Coordinate Transformation Thresh
+          type: number
+          description: How accurately should we solve the internal coordinate transformation
+        covalent_scale:
+          title: Covalent Scale
+          type: number
+          description: Scale factor for the covalent radii used to determine bonding pattern
+        directional_derivative_h:
+          title: Directional Derivative H
+          type: number
+          description: Length of finite difference steps for the Hessian formation
+        directional_derivative_npoint:
+          title: Directional Derivative Npoint
+          type: integer
+          description: Number of finite difference points for the Hessian formation
+        hessian_h:
+          title: Hessian H
+          type: number
+          description: Length of finite difference steps for the Hessian formation
+        hessian_npoint:
+          title: Hessian Npoint
+          type: integer
+          description: Number of finite difference points for the Hessian formation
+        linear_angle_constraint_thresh:
+          title: Linear Angle Constraint Thresh
+          type: number
+          description: Threshold for allowing an angle constraint to be nonlinear
+        linear_angle_thresh:
+          title: Linear Angle Thresh
+          type: number
+          description: Threshold for using the linear angle parameterization
+        metric_inversion_threshold:
+          title: Metric Inversion Threshold
+          type: number
+          description: Threshold for smallest eigenvalue during inversion of redundant coordinate metric
+      additionalProperties: false
+    Pes:
+      title: Pes
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/PesParams'
+    DiagonalHessian:
+      title: DiagonalHessian
+      enum:
+        - unit
+        - almlof
+      type: string
+      description: An enumeration.
+    OptimizationScheme:
+      title: OptimizationScheme
+      enum:
+        - line_search
+        - trust_region
+      type: string
+      description: An enumeration.
+    LBFGSOptimizationParams:
+      title: LBFGSOptimizationParams
+      type: object
+      properties:
+        decrement_step_max:
+          title: Decrement Step Max
+          type: integer
+          description: How many times can the line search fail to find a suitable step before the coordinatae system is rebuilt
+        diagonal_hessian:
+          allOf:
+            - $ref: '#/components/schemas/DiagonalHessian'
+          description: What should be used for the diagonal hessian?
+        diagonal_hessian_update:
+          title: Diagonal Hessian Update
+          type: integer
+          description: How often should the diagonal hessian be updated?
+        eigenvector_canonical_tolerance:
+          title: Eigenvector Canonical Tolerance
+          type: number
+          description: Canonical orthogonalization for hessian eigenvector Davidson
+        eigenvector_convergence:
+          title: Eigenvector Convergence
+          type: number
+          description: How tightly to converge the Hessian eigenvector
+        eigenvector_maxiter:
+          title: Eigenvector Maxiter
+          type: integer
+          description: Maximum number of iterations to converge the Hessian eigenvector
+        eigenvector_maxsubspace:
+          title: Eigenvector Maxsubspace
+          type: integer
+          description: Maximum size of the subspace in the Hessian eigenvector Davidson
+        eigenvector_nguess:
+          title: Eigenvector Nguess
+          type: integer
+          description: Number of guess vectors to use in the Hessian eigenvector Davidson
+        eigenvector_preconditioner_thresh:
+          title: Eigenvector Preconditioner Thresh
+          type: number
+          description: Hessian eigenvector Davidson preconditioner eigenvalues with magnitude smaller than this value are clamped to this value
+        g_convergence:
+          title: G Convergence
+          type: number
+          description: Convergence threshold on the largest component of the gradient
+        greedy_optimizer:
+          title: Greedy Optimizer
+          type: boolean
+          description: Should all steps that lower the energy be accepted?
+        internal_fail_max:
+          title: Internal Fail Max
+          type: integer
+          description: How many times can the internal coordinate transformation fail before the system is rebuilt
+        internal_rebuild_max:
+          title: Internal Rebuild Max
+          type: integer
+          description: How many times can the internal coordinate be rebuilt before declaring failure
+        lbfgs_c1_parameter:
+          title: Lbfgs C1 Parameter
+          type: number
+          description: C1 parameter for evaluating Armijo condition
+        lbfgs_c2_parameter:
+          title: Lbfgs C2 Parameter
+          type: number
+          description: C2 parameter for evaluating the weak Wolfe condition
+        max_angle_step_size:
+          title: Max Angle Step Size
+          type: number
+          description: Largest allowed step size for bond angles
+        max_bond_step_size:
+          title: Max Bond Step Size
+          type: number
+          description: Largest allowed step size for bond distances
+        max_cartesian_step_size:
+          title: Max Cartesian Step Size
+          type: number
+          description: Largest allowed step size for cartesian coordinates
+        max_center_step_size:
+          title: Max Center Step Size
+          type: number
+          description: Largest allowed step size for center translations
+        max_linearangle_step_size:
+          title: Max Linearangle Step Size
+          type: number
+          description: Largest allowed step size for bond angles when linear parameterization is used
+        max_outofplane_step_size:
+          title: Max Outofplane Step Size
+          type: number
+          description: Largest allowed step size for out of plane angles
+        max_reaction_step_size:
+          title: Max Reaction Step Size
+          type: number
+          description: Largest allowed step size for reaction coordinates
+        max_rotation_step_size:
+          title: Max Rotation Step Size
+          type: number
+          description: Largest allowed step size for fragment rotations
+        max_torsion_step_size:
+          title: Max Torsion Step Size
+          type: number
+          description: Largest allowed step size for bond torsions
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of iterations
+        num_hessian_terms:
+          title: Num Hessian Terms
+          type: integer
+          description: Number of Hessian terms to keep in the L-BFGS
+        optimization_scheme:
+          allOf:
+            - $ref: '#/components/schemas/OptimizationScheme'
+          description: Scheme for step control in L-BFGS optimization
+        print_coordinates:
+          title: Print Coordinates
+          type: boolean
+          description: Should the internal coordinates be printed at each step
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        step_dec_scale:
+          title: Step Dec Scale
+          type: number
+          description: Factor to use when the step scaling parameter must be decreased
+        step_inc_scale:
+          title: Step Inc Scale
+          type: number
+          description: Factor to use when the step scaling parameter must be increased
+        step_scale_min:
+          title: Step Scale Min
+          type: number
+          description: Minimum for the line search scaling factor
+        strict_convergence:
+          title: Strict Convergence
+          type: boolean
+          description: Should all four convergence criteria be satisfied to mark as converged
+        trust_region_delta_e:
+          title: Trust Region Delta E
+          type: number
+          description: Defines when the trust radius should be scaled down
+        trust_region_delta_i:
+          title: Trust Region Delta I
+          type: number
+          description: Defines when the trust radius should be scaled up
+        trust_region_delta_o:
+          title: Trust Region Delta O
+          type: number
+          description: The trust radius is scaled down when the ratio predicted / expected is outside 1 +/- trust_region_delta_e
+        trust_region_epsilon_1:
+          title: Trust Region Epsilon 1
+          type: number
+          description: Convergence criterion for the determination of step length
+        trust_region_epsilon_2:
+          title: Trust Region Epsilon 2
+          type: number
+          description: Convergence criterion for the determination of RFO shift parameter
+        trust_region_initial_radius:
+          title: Trust Region Initial Radius
+          type: number
+          description: Initial radius for the trust region
+        trust_region_lower_bound:
+          title: Trust Region Lower Bound
+          type: number
+          description: Lower bound for allowed trust region steps
+        trust_region_maximum_radius:
+          title: Trust Region Maximum Radius
+          type: number
+          description: Maximum radius for the trust region
+        trust_region_maxiter:
+          title: Trust Region Maxiter
+          type: number
+          description: Maximum number of iterations to determine the step size
+        trust_region_microiteration_maxiter:
+          title: Trust Region Microiteration Maxiter
+          type: number
+          description: Maximum number of microiterations to determine the RFO shift parameter
+        trust_region_minimum_radius:
+          title: Trust Region Minimum Radius
+          type: number
+          description: Minimum radius for the trust region
+        trust_region_scale_factor:
+          title: Trust Region Scale Factor
+          type: number
+          description: Defines the factor used to scale the trust radius
+        trust_region_subproblem_constraint:
+          title: Trust Region Subproblem Constraint
+          type: number
+          description: How tightly should the constraint be solved in the trust region subproblem
+        trust_region_subproblem_gradient:
+          title: Trust Region Subproblem Gradient
+          type: number
+          description: How tightly should the gradient of the trust region subproblem be converged
+        trust_region_subproblem_macro_maxiter:
+          title: Trust Region Subproblem Macro Maxiter
+          type: integer
+          description: How many iterations are allowed in the trust region subproblem to converge the constraint
+        trust_region_subproblem_micro_maxiter:
+          title: Trust Region Subproblem Micro Maxiter
+          type: integer
+          description: How many iterations are allowed in the trust region subproblem to converge the gradient with a fixed constraint
+        trust_region_upper_bound:
+          title: Trust Region Upper Bound
+          type: number
+          description: Upper bound for allowed trust region steps
+      additionalProperties: false
+    LBFGSOptimizationOutputs:
+      title: LBFGSOptimizationOutputs
+      type: object
+      properties:
+        dipole_derivatives:
+          title: Dipole Derivatives
+          type: boolean
+          description: Compute dipole derivatives?
+          default: false
+        gradient:
+          title: Gradient
+          type: boolean
+          description: Compute gradient?
+          default: false
+        hessian:
+          title: Hessian
+          type: boolean
+          description: Compute hessian?
+          default: false
+        path:
+          title: Path
+          type: boolean
+          description: Compute path?
+          default: true
+        vibrational_frequencies:
+          title: Vibrational Frequencies
+          type: boolean
+          description: Compute vibrational frequencies?
+          default: false
+    LBFGSOptimization:
+      title: LBFGSOptimization
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/LBFGSOptimizationParams'
+        outputs:
+          $ref: '#/components/schemas/LBFGSOptimizationOutputs'
+    GeometryOptimizationInputSpec:
+      title: GeometryOptimizationInputSpec
+      required:
+        - molecule
+        - system
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeInput'
+        system:
+          $ref: '#/components/schemas/System'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+        est:
+          $ref: '#/components/schemas/Est'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        optimization:
+          $ref: '#/components/schemas/LBFGSOptimization'
+    CreateGeometryOptimizationWorkflowRequest:
+      title: CreateGeometryOptimizationWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - GeometryOptimization
+          type: string
+          default: GeometryOptimization
+        parameters:
+          $ref: '#/components/schemas/GeometryOptimizationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    ChargeAndMultiplicity:
+      title: ChargeAndMultiplicity
+      type: object
+      properties:
+        charge:
+          title: Charge
+          type: integer
+        multiplicity:
+          title: Multiplicity
+          type: integer
+    MoleculeInputWithChargeAndMultiplicity:
+      title: MoleculeInputWithChargeAndMultiplicity
+      type: object
+      properties:
+        filename:
+          title: Filename
+          type: string
+        base64data:
+          title: Base64Data
+          type: string
+        id:
+          title: Id
+          type: string
+          format: uuid4
+        filetype:
+          $ref: '#/components/schemas/ValidFileExtensions'
+        params:
+          $ref: '#/components/schemas/ChargeAndMultiplicity'
+    InteractionEnergyParams:
+      title: InteractionEnergyParams
+      type: object
+      properties:
+        cluster_charge:
+          title: Cluster Charge
+          type: integer
+        cluster_multiplicity:
+          title: Cluster Multiplicity
+          type: integer
+        print_level:
+          title: Print Level
+          type: integer
+      additionalProperties: false
+    InteractionEnergy:
+      title: InteractionEnergy
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/InteractionEnergyParams'
+    InteractionEnergyCalculationInputSpec:
+      title: InteractionEnergyCalculationInputSpec
+      required:
+        - molecule_a
+        - molecule_b
+        - system
+      type: object
+      properties:
+        molecule_a:
+          $ref: '#/components/schemas/MoleculeInputWithChargeAndMultiplicity'
+        molecule_b:
+          $ref: '#/components/schemas/MoleculeInputWithChargeAndMultiplicity'
+        system:
+          $ref: '#/components/schemas/System'
+        interaction_energy:
+          $ref: '#/components/schemas/InteractionEnergy'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        est:
+          $ref: '#/components/schemas/Est'
+    CreateInteractionEnergyCalculationWorkflowRequest:
+      title: CreateInteractionEnergyCalculationWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - InteractionEnergyCalculation
+          type: string
+          default: InteractionEnergyCalculation
+        parameters:
+          $ref: '#/components/schemas/InteractionEnergyCalculationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    GeometryOptimize:
+      title: GeometryOptimize
+      type: object
+      properties:
+        geometry_optimize:
+          title: Geometry Optimize
+          type: boolean
+    MoleculeOutputs:
+      title: MoleculeOutputs
+      type: object
+      properties:
+        vibrational_frequencies:
+          title: Vibrational Frequencies
+          type: boolean
+    MoleculeInputWithGeometryOptimize:
+      title: MoleculeInputWithGeometryOptimize
+      type: object
+      properties:
+        filename:
+          title: Filename
+          type: string
+        base64data:
+          title: Base64Data
+          type: string
+        id:
+          title: Id
+          type: string
+          format: uuid4
+        filetype:
+          $ref: '#/components/schemas/ValidFileExtensions'
+        params:
+          $ref: '#/components/schemas/GeometryOptimize'
+        outputs:
+          $ref: '#/components/schemas/MoleculeOutputs'
+    Integrator:
+      title: Integrator
+      enum:
+        - euler
+        - rk45
+      type: string
+      description: An enumeration.
+    InterpolatedPathParams:
+      title: InterpolatedPathParams
+      type: object
+      properties:
+        alpha:
+          title: Alpha
+          type: number
+          description: Interpolation alpha parameter
+        beta:
+          title: Beta
+          type: number
+          description: Interpolation beta parameter
+        dt:
+          title: Dt
+          type: number
+          description: Initial time step for integrating the path
+        dt_max:
+          title: Dt Max
+          type: number
+          description: Maximum time step for integrating the path
+        dt_min:
+          title: Dt Min
+          type: number
+          description: Minimum time step for integrating the path
+        integrator:
+          allOf:
+            - $ref: '#/components/schemas/Integrator'
+          description: Integrator to use to obtain the interpolated path
+        metric_thresh:
+          title: Metric Thresh
+          type: number
+          description: Cutoff threshold for eigenvalues of the metric inverse
+        nbeads:
+          title: Nbeads
+          type: integer
+          description: Number of beads to use in the final interpolated path
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        rk_thresh:
+          title: Rk Thresh
+          type: number
+          description: Accuracy threshold for the RK45 integrator
+        save_resolution:
+          title: Save Resolution
+          type: number
+          description: Save structures when they become this far apart
+        sigma:
+          title: Sigma
+          type: number
+          description: Interpolation sigma parameter
+      additionalProperties: false
+    InterpolatedPath:
+      title: InterpolatedPath
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/InterpolatedPathParams'
+    NebPathParams:
+      title: NebPathParams
+      type: object
+      properties:
+        force_constant_lower:
+          title: Force Constant Lower
+          type: number
+          description: Lower bound on the force constant for the NEB springs
+        force_constant_upper:
+          title: Force Constant Upper
+          type: number
+          description: Upper bound on the force constant for the NEB springs
+      additionalProperties: false
+    NebPath:
+      title: NebPath
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/NebPathParams'
+    FIREOptimizerParams:
+      title: FIREOptimizerParams
+      type: object
+      properties:
+        alpha_shrink:
+          title: Alpha Shrink
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        alpha_start:
+          title: Alpha Start
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        delay_step:
+          title: Delay Step
+          type: integer
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        dt_grow:
+          title: Dt Grow
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        dt_shrink:
+          title: Dt Shrink
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        dt_start:
+          title: Dt Start
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        g_convergence:
+          title: G Convergence
+          type: number
+          description: Convergence threshold on the largest component of the gradient
+        halfstepback:
+          title: Halfstepback
+          type: boolean
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        initialdelay:
+          title: Initialdelay
+          type: boolean
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of iterations
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        tmax:
+          title: Tmax
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        tmin:
+          title: Tmin
+          type: number
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+        vdfmax:
+          title: Vdfmax
+          type: integer
+          description: 'See: https://doi.org/10.1016/j.commatsci.2020.109584'
+      additionalProperties: false
+    FIREOptimizer:
+      title: FIREOptimizer
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/FIREOptimizerParams'
+    ReactionPathOptimizationInputSpec:
+      title: ReactionPathOptimizationInputSpec
+      required:
+        - reactant
+        - product
+        - system
+      type: object
+      properties:
+        reactant:
+          $ref: '#/components/schemas/MoleculeInputWithGeometryOptimize'
+        product:
+          $ref: '#/components/schemas/MoleculeInputWithGeometryOptimize'
+        system:
+          $ref: '#/components/schemas/System'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+        optimization:
+          $ref: '#/components/schemas/LBFGSOptimization'
+        interpolation:
+          $ref: '#/components/schemas/InterpolatedPath'
+        neb:
+          $ref: '#/components/schemas/NebPath'
+        fire:
+          $ref: '#/components/schemas/FIREOptimizer'
+    CreateReactionPathOptimizationWorkflowRequest:
+      title: CreateReactionPathOptimizationWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - ReactionPathOptimization
+          type: string
+          default: ReactionPathOptimization
+        parameters:
+          $ref: '#/components/schemas/ReactionPathOptimizationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    SinglePointCalculationInputSpec:
+      title: SinglePointCalculationInputSpec
+      required:
+        - molecule
+        - system
+        - hf
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeInput'
+        system:
+          $ref: '#/components/schemas/System'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        est:
+          $ref: '#/components/schemas/Est'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+    CreateSinglePointCalculationWorkflowRequest:
+      title: CreateSinglePointCalculationWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - SinglePointCalculation
+          type: string
+          default: SinglePointCalculation
+        parameters:
+          $ref: '#/components/schemas/SinglePointCalculationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    TorsionConstraintParams:
+      title: TorsionConstraintParams
+      type: object
+      properties:
+        atomA:
+          title: Atoma
+          type: integer
+          description: First atom in the torsional angle
+        atomB:
+          title: Atomb
+          type: integer
+          description: Second atom in the torsional angle
+        atomC:
+          title: Atomc
+          type: integer
+          description: Third atom in the torsional angle
+        atomD:
+          title: Atomd
+          type: integer
+          description: Fourth atom in the torsional angle
+      additionalProperties: false
+    TorsionConstraint:
+      title: TorsionConstraint
+      required:
+        - params
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/TorsionConstraintParams'
+    RotationalPathParams:
+      title: RotationalPathParams
+      type: object
+      properties:
+        alpha:
+          title: Alpha
+          type: number
+          description: Interpolation alpha parameter
+        beta:
+          title: Beta
+          type: number
+          description: Interpolation beta parameter
+        coordinate_transformation_maxiter:
+          title: Coordinate Transformation Maxiter
+          type: integer
+          description: Maximum number of iterations in the internal coordinate transformation
+        coordinate_transformation_thresh:
+          title: Coordinate Transformation Thresh
+          type: number
+          description: How accurately should we solve the internal coordinate transformation
+        covalent_scale:
+          title: Covalent Scale
+          type: number
+          description: Scale factor for the covalent radii used to determine bonding pattern
+        dt:
+          title: Dt
+          type: number
+          description: Initial time step for integrating the path
+        dt_max:
+          title: Dt Max
+          type: number
+          description: Maximum time step for integrating the path
+        dt_min:
+          title: Dt Min
+          type: number
+          description: Minimum time step for integrating the path
+        integrator:
+          allOf:
+            - $ref: '#/components/schemas/Integrator'
+          description: Integrator to use to obtain the interpolated path
+        linear_angle_thresh:
+          title: Linear Angle Thresh
+          type: number
+          description: Threshold for using the linear angle parameterization
+        metric_thresh:
+          title: Metric Thresh
+          type: number
+          description: Cutoff threshold for eigenvalues of the metric inverse
+        nbeads:
+          title: Nbeads
+          maximum: 361
+          minimum: 1
+          type: integer
+          description: Number of beads to use in the final interpolated path
+        parameter_exponent:
+          title: Parameter Exponent
+          type: number
+          description: Exponent to apply to the alpha, beta and sigma parameters
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        rk_thresh:
+          title: Rk Thresh
+          type: number
+          description: Accuracy threshold for the RK45 integrator
+        sigma:
+          title: Sigma
+          type: number
+          description: Interpolation sigma parameter
+      additionalProperties: false
+    RotationalPath:
+      title: RotationalPath
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/RotationalPathParams'
+    Torsion:
+      title: Torsion
+      required:
+        - constraint
+      type: object
+      properties:
+        constraint:
+          $ref: '#/components/schemas/TorsionConstraint'
+        interpolation:
+          $ref: '#/components/schemas/RotationalPath'
+    TorsionScanInitializationInputSpec:
+      title: TorsionScanInitializationInputSpec
+      required:
+        - molecule
+        - system
+        - torsion
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeInput'
+        system:
+          $ref: '#/components/schemas/System'
+        torsion:
+          $ref: '#/components/schemas/Torsion'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+        est:
+          $ref: '#/components/schemas/Est'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        optimization:
+          $ref: '#/components/schemas/LBFGSOptimization'
+    CreateTorsionScanWorkflowRequest:
+      title: CreateTorsionScanWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - TorsionScan
+          type: string
+          default: TorsionScan
+        parameters:
+          $ref: '#/components/schemas/TorsionScanInitializationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    Preconditioner:
+      title: Preconditioner
+      required:
+        - system
+      type: object
+      properties:
+        system:
+          $ref: '#/components/schemas/System'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        est:
+          $ref: '#/components/schemas/Est'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+    PRFOOptimizerParams:
+      title: PRFOOptimizerParams
+      type: object
+      properties:
+        eigenvector_canonical_tolerance:
+          title: Eigenvector Canonical Tolerance
+          type: number
+          description: Canonical orthogonalization for hessian eigenvector Davidson
+        eigenvector_convergence:
+          title: Eigenvector Convergence
+          type: number
+          description: How tightly to converge the Hessian eigenvector
+        eigenvector_maxiter:
+          title: Eigenvector Maxiter
+          type: integer
+          description: Maximum number of iterations to converge the Hessian eigenvector
+        eigenvector_maxsubspace:
+          title: Eigenvector Maxsubspace
+          type: integer
+          description: Maximum size of the subspace in the Hessian eigenvector Davidson
+        eigenvector_nguess:
+          title: Eigenvector Nguess
+          type: integer
+          description: Number of guess vectors to use in the Hessian eigenvector Davidson
+        eigenvector_preconditioner_thresh:
+          title: Eigenvector Preconditioner Thresh
+          type: number
+          description: Hessian eigenvector Davidson preconditioner eigenvalues with magnitude smaller than this value are clamped to this value
+        g_convergence:
+          title: G Convergence
+          type: number
+          description: Convergence threshold on the largest component of the gradient
+        maxiter:
+          title: Maxiter
+          type: integer
+          description: Maximum number of iterations
+        print_level:
+          title: Print Level
+          type: integer
+          description: Level of detail to print
+        strict_convergence:
+          title: Strict Convergence
+          type: boolean
+          description: Should all four convergence criteria be satisfied to mark as converged
+        trust_region_delta_e:
+          title: Trust Region Delta E
+          type: number
+          description: Defines when the trust radius should be scaled down
+        trust_region_delta_i:
+          title: Trust Region Delta I
+          type: number
+          description: Defines when the trust radius should be scaled up
+        trust_region_epsilon_1:
+          title: Trust Region Epsilon 1
+          type: number
+          description: Convergence criterion for the determination of step length
+        trust_region_epsilon_2:
+          title: Trust Region Epsilon 2
+          type: number
+          description: Convergence criterion for the determination of RFO shift parameter
+        trust_region_initial_radius:
+          title: Trust Region Initial Radius
+          type: number
+          description: Initial radius for the trust region
+        trust_region_lower_bound:
+          title: Trust Region Lower Bound
+          type: number
+          description: Lower bound for allowed trust region steps
+        trust_region_maximum_radius:
+          title: Trust Region Maximum Radius
+          type: number
+          description: Maximum radius for the trust region
+        trust_region_maxiter:
+          title: Trust Region Maxiter
+          type: number
+          description: Maximum number of iterations to determine the step size
+        trust_region_microiteration_maxiter:
+          title: Trust Region Microiteration Maxiter
+          type: number
+          description: Maximum number of microiterations to determine the RFO shift parameter
+        trust_region_scale_factor:
+          title: Trust Region Scale Factor
+          type: number
+          description: Defines the factor used to scale the trust radius
+        trust_region_upper_bound:
+          title: Trust Region Upper Bound
+          type: number
+          description: Upper bound for allowed trust region steps
+      additionalProperties: false
+    PRFOOptimizerOutputs:
+      title: PRFOOptimizerOutputs
+      type: object
+      properties:
+        dipole_derivatives:
+          title: Dipole Derivatives
+          type: boolean
+          description: Compute dipole derivatives?
+          default: false
+        gradient:
+          title: Gradient
+          type: boolean
+          description: Compute gradient?
+          default: false
+        hessian:
+          title: Hessian
+          type: boolean
+          description: Compute hessian?
+          default: false
+        path:
+          title: Path
+          type: boolean
+          description: Compute path?
+          default: true
+        vibrational_frequencies:
+          title: Vibrational Frequencies
+          type: boolean
+          description: Compute vibrational frequencies?
+          default: false
+    PRFOOptimizer:
+      title: PRFOOptimizer
+      type: object
+      properties:
+        params:
+          $ref: '#/components/schemas/PRFOOptimizerParams'
+        outputs:
+          $ref: '#/components/schemas/PRFOOptimizerOutputs'
+    TransitionStateOptimizationInputSpec:
+      title: TransitionStateOptimizationInputSpec
+      required:
+        - molecule
+        - system
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeInput'
+        system:
+          $ref: '#/components/schemas/System'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        est:
+          $ref: '#/components/schemas/Est'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+        preconditioner:
+          $ref: '#/components/schemas/Preconditioner'
+        optimization:
+          $ref: '#/components/schemas/PRFOOptimizer'
+    CreateTransitionStateOptimizationWorkflowRequest:
+      title: CreateTransitionStateOptimizationWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - TransitionStateOptimization
+          type: string
+          default: TransitionStateOptimization
+        parameters:
+          $ref: '#/components/schemas/TransitionStateOptimizationInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    TransitionStateOptimizationFromEndpointsInputSpec:
+      title: TransitionStateOptimizationFromEndpointsInputSpec
+      required:
+        - reactant
+        - product
+        - system
+      type: object
+      properties:
+        reactant:
+          $ref: '#/components/schemas/MoleculeInputWithGeometryOptimize'
+        product:
+          $ref: '#/components/schemas/MoleculeInputWithGeometryOptimize'
+        system:
+          $ref: '#/components/schemas/System'
+        jk_builder:
+          $ref: '#/components/schemas/JkBuilder'
+        xc_builder:
+          $ref: '#/components/schemas/XcBuilder'
+        est:
+          $ref: '#/components/schemas/Est'
+        hf:
+          $ref: '#/components/schemas/Hf'
+        rcis:
+          $ref: '#/components/schemas/Rcis'
+        pes:
+          $ref: '#/components/schemas/Pes'
+        preconditioner:
+          $ref: '#/components/schemas/Preconditioner'
+        optimization:
+          $ref: '#/components/schemas/LBFGSOptimization'
+        interpolation:
+          $ref: '#/components/schemas/InterpolatedPath'
+        neb:
+          $ref: '#/components/schemas/NebPath'
+        fire:
+          $ref: '#/components/schemas/FIREOptimizer'
+        prfo:
+          $ref: '#/components/schemas/PRFOOptimizer'
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest:
+      title: CreateTransitionStateOptimizationFromEndpointsWorkflowRequest
+      required:
+        - name
+        - parameters
+        - resources
+      type: object
+      properties:
+        version:
+          title: Version
+          enum:
+            - v1
+          type: string
+          default: v1
+        name:
+          title: Name
+          type: string
+          description: The user-defined name of the workflow
+        kind:
+          title: Kind
+          enum:
+            - TransitionStateOptimizationFromEndpoints
+          type: string
+          default: TransitionStateOptimizationFromEndpoints
+        parameters:
+          $ref: '#/components/schemas/TransitionStateOptimizationFromEndpointsInputSpec'
+        resources:
+          $ref: '#/components/schemas/ResourceRequest'
+      additionalProperties: false
+    WorkflowNumericResults:
+      title: WorkflowNumericResults
+      required:
+        - id
+        - kind
+        - api_version
+        - status
+        - results
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          format: uuid4
+        kind:
+          title: Kind
+          type: string
+        api_version:
+          title: Api Version
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkflowStatus'
+        results:
+          title: Results
+          type: object
+      additionalProperties: false
+    FileMetadata:
+      title: FileMetadata
+      required:
+        - id
+        - name
+        - is_directory
+        - created_at
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+          description: The unique id of the file
+          format: uuid4
+        name:
+          title: Name
+          type: string
+          description: The name of the file
+        parent_id:
+          title: Parent Id
+          type: string
+          description: The id of the parent directory; optional only for the root
+          format: uuid4
+        is_directory:
+          title: Is Directory
+          type: boolean
+          description: True if this is a directory, false otherwise
+        created_at:
+          title: Created At
+          type: string
+          description: The creation date of the file
+          format: date-time
+        size_bytes_uncompressed:
+          title: Size Bytes Uncompressed
+          type: integer
+          description: The length of the file
+          default: 0
+        sha256_uncompressed:
+          title: Sha256 Uncompressed
+          type: string
+          description: The SHA256 hash of the file contents
+      additionalProperties: false
+    UpdateFileRequest:
+      title: UpdateFileRequest
+      type: object
+      properties:
+        parent_id:
+          title: Parent Id
+          type: string
+          description: The id of the parent directory; optional only for the root
+          format: uuid4
+      additionalProperties: false
+    Page_FileMetadata_:
+      title: Page[FileMetadata]
+      required:
+        - items
+        - total
+        - page
+        - size
+      type: object
+      properties:
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+        total:
+          title: Total
+          minimum: 0
+          type: integer
+        page:
+          title: Page
+          minimum: 1
+          type: integer
+        size:
+          title: Size
+          minimum: 1
+          type: integer
+    CreateSimpleFileRequest:
+      title: CreateSimpleFileRequest
+      required:
+        - name
+        - is_directory
+        - base64body
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          description: The name of the file
+        parent_id:
+          title: Parent Id
+          type: string
+          description: The id of the parent directory; optional only for the root
+          format: uuid4
+        is_directory:
+          title: Is Directory
+          enum:
+            - false
+          type: boolean
+        base64body:
+          title: Base64Body
+          type: string
+          description: Contents of the file as a base64 string
+      additionalProperties: false
+    CreateDirectoryRequest:
+      title: CreateDirectoryRequest
+      required:
+        - name
+        - is_directory
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          description: The name of the file
+        parent_id:
+          title: Parent Id
+          type: string
+          description: The id of the parent directory; optional only for the root
+          format: uuid4
+        is_directory:
+          title: Is Directory
+          enum:
+            - true
+          type: boolean
+      additionalProperties: false

@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "promethium"
+version = "0.1.0"
+description = "Python client for interacting with the Promethium Quantum Chemistry platform"
+authors = ["QC Ware Corp"]
+license = "Proprietary"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+httpx = "^0.25.0"
+pydantic = "2.3.0"
+PyYAML = "^6.0.1"
+pandas = "^2.1.1"
+jupyter = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+respx = "^0.20.2"
+pytest = "^7.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
