@@ -2,7 +2,11 @@
 
 Performs a geometry optimization with B3LYP/def2-SVP and a single point on the optimized structure with B3LYP/def2-TZVP.
 
-To run:
+To run the `httpx` version:
 ```
-PYTHONPATH=.. python run.py
+python httpx/run.py
+```
+To run the `sdk` version:
+```
+python sdk/run.py
 ```
