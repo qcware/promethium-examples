@@ -28,7 +28,7 @@ def wait_for_workflows_to_complete(
     log_events = [],
     interval = 10,
     timeout = 3600,
-    ):
+    ) -> dict:
 
     def _should_log(state_change, log_events):
         return (
@@ -66,4 +66,5 @@ def wait_for_workflows_to_complete(
             poll = False
             return responses
         time.sleep(interval)
+    raise RuntimeError("Workflow polling error")
 
