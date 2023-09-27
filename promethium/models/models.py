@@ -699,6 +699,11 @@ class HfBaseParams(BaseModel):
         description="Print timings at end of SCF gradient computation?",
         title="Print Gradient Timings",
     )
+    print_hessian_timings: Optional[bool] = Field(
+        None,
+        description="Print timings at end of SCF Hessian computation?",
+        title="Print Hessian Timings",
+    )
     print_level: Optional[int] = Field(
         None, description="Level of detail to print", title="Print Level"
     )
@@ -822,6 +827,11 @@ class HfParams(BaseModel):
         None,
         description="Print timings at end of SCF gradient computation?",
         title="Print Gradient Timings",
+    )
+    print_hessian_timings: Optional[bool] = Field(
+        None,
+        description="Print timings at end of SCF Hessian computation?",
+        title="Print Hessian Timings",
     )
     print_level: Optional[int] = Field(
         None, description="Level of detail to print", title="Print Level"
