@@ -10,3 +10,8 @@ To activate the virtual environment:
 ```
 poetry shell
 ```
+
+Add the path to the root of the this repo to your python path:
+```
+export PYTHONPATH=${PWD}
+```
