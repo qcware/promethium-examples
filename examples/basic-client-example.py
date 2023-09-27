@@ -50,10 +50,10 @@ prom.workflows.download(id=workflow_id)
 
 # Submit a workflow:
 config = {
-  "name": "client-example-geometry-optimization",
-  "version": "v1",
-  "kind": "GeometryOptimization",
-  "parameters": {
+    "name": "client-example-geometry-optimization",
+    "version": "v1",
+    "kind": "GeometryOptimization",
+    "parameters": {
         "molecule": {
             "id": str(file_id),
         },
@@ -62,35 +62,24 @@ config = {
                 "basisname": "def2-tzvp",
                 "jkfit_basisname": "def2-universal-jkfit",
                 "xc_functional_name": "b3lyp",
-				"xc_grid_scheme": "SG2"			
+                "xc_grid_scheme": "SG2",
             }
         },
         "hf": {
             "params": {
                 "multiplicity": 1,
                 "charge": 0,
-				"g_convergence": 1.0e-8,
-				"print_level": 2
+                "g_convergence": 1.0e-8,
+                "print_level": 2,
             }
         },
-		    "pes": {
-            "params": {
-                "coordinate_system_name": "redundant"
-            }
-        },
+        "pes": {"params": {"coordinate_system_name": "redundant"}},
         "optimization": {
-            "params": {
-                "maxiter": 20
-            },
-            "outputs": {
-                "gradient": False,
-                "vibrational_frequencies": True
-            }
-        }
-  },
-	"resources": {
-		"gpu_type": "a100"
-	}
+            "params": {"maxiter": 20},
+            "outputs": {"gradient": False, "vibrational_frequencies": True},
+        },
+    },
+    "resources": {"gpu_type": "a100"},
 }
 payload = CreateGeometryOptimizationWorkflowRequest(**config)
 go_workflow = prom.workflows.submit(payload)

@@ -94,9 +94,7 @@ def test_wait_for_workflows_to_complete_timeout(
 
 
 @respx.mock
-def test_workflow_success_and_decode(
-    workflow_id: UUID4, client: httpx.Client, capsys
-):
+def test_workflow_success_and_decode(workflow_id: UUID4, client: httpx.Client, capsys):
     OPTIMIZED_MOLECULE = """14
 
 O                2.878375420200    -0.324262510357    -0.000299891767

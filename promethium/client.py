@@ -37,7 +37,6 @@ def handle_response(response, not_found_exception: Type):
 
 
 class BaseResource:
-    
     def __init__(self, client: Client) -> None:
         self._client = client
 
@@ -47,11 +46,11 @@ class BaseResource:
 
 
 class Files(BaseResource):
-
     def __init__(self, client: Client) -> None:
         super().__init__(client)
         self._handle_response = partial(
-            handle_response, not_found_exception=FileNotFound)
+            handle_response, not_found_exception=FileNotFound
+        )
 
     @classmethod
     def metadata_from_items(cls, items: list[dict]) -> list[FileMetadata]:
@@ -61,21 +60,20 @@ class Files(BaseResource):
         response = self._client.get(f"/v0/files/{id}")
         self._handle_response(response)
         return response.json()
-    
+
     def download(self, id: UUID4) -> Union[str, bytes]:
-        response = self._client.get(
-            f"/v0/files/{id}/download", follow_redirects=True)
+        response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
         self._handle_response(response)
         return response.content
 
-    def list(self, page: Optional[int] = None, size: int = 10) -> Union[Generator, list[FileMetadata]]:
+    def list(
+        self, page: Optional[int] = None, size: int = 10
+    ) -> Union[Generator, list[FileMetadata]]:
         iterate = page is None
         page = 1 if page is None else page
         total = page * size + 1
         while (page - 1) * size < total:
-            response = self._client.get(
-                "/v0/files", params={"page": page}
-            )
+            response = self._client.get("/v0/files", params={"page": page})
             self._handle_response(response)
             page_json = response.json()
             if not iterate:
@@ -86,11 +84,11 @@ class Files(BaseResource):
 
 
 class Workflows(BaseResource):
-
     def __init__(self, client: Client) -> None:
         super().__init__(client)
         self._handle_response = partial(
-            handle_response, not_found_exception=WorkflowNotFound)
+            handle_response, not_found_exception=WorkflowNotFound
+        )
 
     def get(self, id: UUID4) -> Workflow:
         workflow_response = self._client.get(f"/v0/workflows/{id}")
@@ -104,14 +102,15 @@ class Workflows(BaseResource):
     def status(self, id: UUID4) -> WorkflowStatus:
         return self.get(id).status
 
-    def list(self, kind: WorkflowKind, page: Optional[int] = None, size: int = 10) -> Union[Generator, list[Workflow]]:
+    def list(
+        self, kind: WorkflowKind, page: Optional[int] = None, size: int = 10
+    ) -> Union[Generator, list[Workflow]]:
         iterate = page is None
         page = 1 if page is None else page
         total = page * size + 1
         while (page - 1) * size < total:
             response = self._client.get(
-                "/v0/workflows",
-                params={"kind": kind.value, "page": page}
+                "/v0/workflows", params={"kind": kind.value, "page": page}
             )
             self._handle_response(response)
             page_json = response.json()
@@ -134,11 +133,9 @@ class Workflows(BaseResource):
 
     def wait(self, id: UUID4, interval: int = 10, timeout: int = 24 * 3600) -> None:
         wait_for_workflows_to_complete(
-            client=self._client,
-            workflow_ids=[id],
-            interval=interval,
-            timeout=timeout)
-        
+            client=self._client, workflow_ids=[id], interval=interval, timeout=timeout
+        )
+
     def stop(self, id: UUID) -> None:
         response = self._client.post(f"/v0/workflows/{id}/stop")
         self._handle_response(response)
@@ -146,12 +143,12 @@ class Workflows(BaseResource):
     def download(self, id: UUID4, path: Optional[str] = None) -> None:
         path = os.getcwd() if path is None else path
         response = self._client.get(
-            f"/v0/workflows/{id}/results/download",
-            follow_redirects=True)
+            f"/v0/workflows/{id}/results/download", follow_redirects=True
+        )
         self._handle_response(response)
 
     def delete(self, id: UUID4) -> None:
-        """ Deletes a workflow, or raises if it doesn't exist,
+        """Deletes a workflow, or raises if it doesn't exist,
         or otherwise can't be deleted e.g., if it is not in a terminal state.
 
         409 Conflict - if the workflow is not in a terminal state
@@ -161,14 +158,21 @@ class Workflows(BaseResource):
 
 
 class PromethiumClient:
-    
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None) -> None:
-        self.base_url = os.getenv("PROMETHIUM_API_BASE_URL", "https://api.promethium.qcware.com") if base_url is None else base_url
+    def __init__(
+        self, base_url: Optional[str] = None, api_key: Optional[str] = None
+    ) -> None:
+        self.base_url = (
+            os.getenv("PROMETHIUM_API_BASE_URL", "https://api.promethium.qcware.com")
+            if base_url is None
+            else base_url
+        )
         self._client = Client(
             base_url=self.base_url,
             headers={
-                "X-API-KEY": os.environ['PROMETHIUM_API_KEY'] if api_key is None else api_key
-            }
+                "X-API-KEY": os.environ["PROMETHIUM_API_KEY"]
+                if api_key is None
+                else api_key
+            },
         )
         self._workflows = Workflows(client=self.client)
         self._files = Files(client=self.client)
@@ -176,7 +180,7 @@ class PromethiumClient:
     @property
     def client(self) -> Client:
         return self._client
-    
+
     @property
     def files(self) -> Files:
         return self._files
@@ -184,4 +188,3 @@ class PromethiumClient:
     @property
     def workflows(self) -> Workflows:
         return self._workflows
-    

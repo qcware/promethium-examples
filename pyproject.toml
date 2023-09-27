@@ -18,6 +18,7 @@ jupyter = "^1.0.0"
 respx = "^0.20.2"
 pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
+black = "^23.9.1"
 
 [build-system]
 requires = ["poetry-core"]
