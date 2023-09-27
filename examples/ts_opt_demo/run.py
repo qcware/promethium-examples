@@ -1,14 +1,14 @@
 import requests
 import base64
 import json
-import itertools
 import httpx
 import os
 
 from utils import wait_for_workflows_to_complete
 
 foldername = 'output'
-url = "https://api.promethium-dev.qcware.com/v0/workflows"
+base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 mol = base64.b64encode(b"""
   C -1.254249740 0.397846920 -0.466359900
@@ -68,7 +68,7 @@ job_params = {
         },
     },
     "resources": {
-        "gpu_type": "v100"
+        "gpu_type": gpu_type
     },
 }
 
@@ -83,7 +83,7 @@ client = httpx.Client(base_url='https://api.promethium-dev.qcware.com', headers=
 payload = job_params
 jobname = payload['name']
 print(f'Submitting {jobname}...', end='')
-response = requests.post(url, json=payload, headers=headers)
+response = client.post("/v0/workflows", json=payload)
 with open(f'{foldername}/{jobname}_submitted.json', 'w') as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
@@ -97,22 +97,18 @@ workflow = wait_for_workflows_to_complete(
 )[workflow_id]
 print(f"Workflow completed with status: {workflow['status']}")
 
-url = f'https://api.promethium-dev.qcware.com/v0/workflows/{workflow_id}'
-response = requests.get(url, headers=headers).json()
+response = client.get(f'/v0/workflows/{workflow_id}').json()
 with open(f'{foldername}/{jobname}_status.json', 'w') as fp:
     fp.write(json.dumps(response))
 name = response['name']
 timetaken = response['duration_seconds']
 print(f'Name: {name}, time taken: {timetaken:.2f}s')
 
-url = f'https://api.promethium-dev.qcware.com/v0/workflows/{workflow_id}/results'
-response = requests.get(url, headers=headers).json()
+response = client.get(f'/v0/workflows/{workflow_id}/results').json()
 with open(f'{foldername}/{jobname}_results.json', 'w') as fp:
     fp.write(json.dumps(response))
 
-url = f'https://api.promethium-dev.qcware.com/v0/workflows/{workflow_id}/results/download'
-response = requests.get(url, headers=headers, stream=True)
+response = client.get(f'/v0/workflows/{workflow_id}/results/download', follow_redirects=True)
 with open(f'{foldername}/{jobname}_results.zip', 'wb') as fp:
-    for chunk in response.iter_content(chunk_size=128):
-        fp.write(chunk)
+    fp.write(response.content)
 
