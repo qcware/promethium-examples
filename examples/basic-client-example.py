@@ -83,6 +83,7 @@ config = {
 }
 payload = CreateGeometryOptimizationWorkflowRequest(**config)
 go_workflow = prom.workflows.submit(payload)
+print("Workflow submitted, waiting for completion...")
 
 # Wait for a workflow to finish:
 prom.workflows.wait(id=go_workflow.id)

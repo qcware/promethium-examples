@@ -29,7 +29,7 @@ mol = base64.b64encode(b"""
 """).decode("utf-8")
 
 job_params = {
-    "name": f"api_ts_opt",
+    "name": "api_ts_opt",
     "version": "v1",
     "kind": "TransitionStateOptimization",
     "parameters": {
@@ -81,12 +81,13 @@ headers = {
     "content-type": "application/json"
 }
 
-client = httpx.Client(base_url='https://api.promethium-dev.qcware.com', headers=headers)
+client = httpx.Client(base_url=base_url, headers=headers)
 
 payload = job_params
 jobname = payload['name']
 print(f'Submitting {jobname}...', end='')
 response = client.post("/v0/workflows", json=payload)
+response.raise_for_status()
 with open(f'{foldername}/{jobname}_submitted.json', 'w') as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]

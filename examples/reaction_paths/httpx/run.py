@@ -9,6 +9,10 @@ from utils import wait_for_workflows_to_complete
 foldername = 'output'
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+dir_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
 
 headers = {
     "x-api-key" : os.environ['PM_API_KEY'],
@@ -22,13 +26,13 @@ n = 4
 workflow_ids = []
 
 for i in range(1, n+1):
-    with open(f"{i}/reactant.xyz", "r") as fp:
+    with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:
         reactant = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
-    with open(f"{i}/product.xyz", "r") as fp:
+    with open(os.path.join(dir_path, f"{i}/product.xyz"), "r") as fp:
         product = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
 
     job_params = {
-        "name": f"api_ts_opt",
+        "name": f"api-ts-opt-{i}",
         "version": "v1",
         "kind": "ReactionPathOptimization",
         "parameters": {

@@ -1,5 +1,3 @@
-from datetime import datetime
-from enum import Enum
 from functools import partial
 import os
 from typing import Generator, Optional, Type, Union
@@ -17,8 +15,6 @@ from promethium.models import (
     WorkflowStatus,
 )
 from promethium.utils import (
-    base64decode,
-    decode_artifact,
     wait_for_workflows_to_complete,
     TERMINAL_STATUSES,
     NON_TERMINAL_STATUSES,

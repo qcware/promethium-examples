@@ -9,6 +9,9 @@ foldername = 'output'
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
+
 mol = base64.b64encode(b"""
     O           -1.510407226976     0.757898746844     0.000000000000
     O           -0.553334234073    -1.306832947272     0.000000000000

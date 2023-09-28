@@ -10,6 +10,9 @@ foldername = 'output'
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
+
 mol = base64.b64encode(b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
@@ -82,7 +85,7 @@ mol = base64.b64encode(b"""
 mol = mol.decode("utf-8")
 
 job_params = {
-    "name": f"paxlovid_api_geomopt",
+    "name": "paxlovid_api_geomopt",
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
@@ -173,7 +176,7 @@ with open(f'{foldername}/{jobname}_results.zip', 'wb') as fp:
     fp.write(response.content)
 
 job_params = {
-    "name": f"paxlovid_api_spe",
+    "name": "paxlovid_api_spe",
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {

@@ -43,7 +43,7 @@ product = base64.b64encode(b"""
 """).decode("utf-8")
 
 job_params = {
-    "name": f"api_ts_opt",
+    "name": "api_ts_opt",
     "version": "v1",
     "kind": "TransitionStateOptimizationFromEndpoints",
     "parameters": {

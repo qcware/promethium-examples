@@ -5,11 +5,14 @@ from promethium.client import PromethiumClient
 from promethium.models import (
     CreateReactionPathOptimizationWorkflowRequest,
 )
-from promethium.utils import wait_for_workflows_to_complete
+from promethium.utils import (
+    base64encode,
+)
 
 foldername = 'output'
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+dir_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
@@ -20,10 +23,10 @@ workflow_ids = []
 prom = PromethiumClient(api_key=os.environ['PM_API_KEY'])
 
 for i in range(1, n+1):
-    with open(f"{i}/reactant.xyz", "r") as fp:
-        reactant = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
-    with open(f"{i}/product.xyz", "r") as fp:
-        product = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
+    with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:
+        reactant = base64encode(fp.read())
+    with open(os.path.join(dir_path, f"{i}/product.xyz"), "r") as fp:
+        product = base64encode(fp.read())
 
     job_params = {
         "name": f"API Reaction Path Optimization: {i}",
