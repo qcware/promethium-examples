@@ -26,7 +26,7 @@ mol = base64.b64encode(b"""
 """).decode("utf-8")
 
 job_params = {
-    "name": "melarsoprol_api_hessian",
+    "name": "api_hessian_timings",
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
@@ -50,18 +50,22 @@ job_params = {
                 "print_level": 2,
                 "print_timings": True,
                 "print_gradient_timings": True,
+                # Note: this will fail if multiplicity != 1 when print_hessian_timings is True.
+                # This will resolve itself when UKS hessians are available.
                 "print_hessian_timings": True
             },
         },
         "pes": {
             "params": {
-                "coordinate_system_name": "redundant"
+                "coordinate_system_name": "redundant",
+                # Toggle to force numerical hessian (default is analytical):
+                # "force_numerical_hessian": True,
             },
         },
         "optimization": {
             "params": {
                 "maxiter": 200,
-                "g_convergence": 1.0e-3
+                "g_convergence": 1.0e-3,
             },
             "outputs": {
                 "gradient": True,

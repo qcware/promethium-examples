@@ -989,6 +989,11 @@ class PesParams(BaseModel):
         description="Number of finite difference points for the Hessian formation",
         title="Directional Derivative Npoint",
     )
+    force_numerical_hessian: Optional[bool] = Field(
+        None,
+        description="Force the use of finite difference hessians even if analytic hessians are available.",
+        title="Force Numerical Hessian",
+    )
     hessian_h: Optional[float] = Field(
         None,
         description="Length of finite difference steps for the Hessian formation",
