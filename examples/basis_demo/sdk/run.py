@@ -7,14 +7,15 @@ from promethium.models import (
     CreateSinglePointCalculationWorkflowRequest,
 )
 
-foldername = 'output'
+foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(b"""
+mol = base64.b64encode(
+    b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -81,7 +82,8 @@ mol = base64.b64encode(b"""
     H         5.01368       -7.22264       -3.06214
     H         4.60618       -8.50157       -0.79514
     H         6.28295       -7.90612       -0.99587
-    O         3.42325       -5.20351       -2.69779""")
+    O         3.42325       -5.20351       -2.69779"""
+)
 
 mol = mol.decode("utf-8")
 
@@ -91,15 +93,12 @@ job_params = {
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
-        "molecule": {
-            "base64data": mol,
-            "filetype": "xyz"
-        },
+        "molecule": {"base64data": mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": 'def2-svp',
+                "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": 'b3lyp',
+                "xc_functional_name": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
@@ -109,31 +108,21 @@ job_params = {
                 "multiplicity": 1,
                 "charge": 0,
                 "g_convergence": 1.0e-6,
-                "print_level": 0
+                "print_level": 0,
             },
         },
         "pes": {
-            "params": {
-                "coordinate_system_name": "redundant"
-            },
+            "params": {"coordinate_system_name": "redundant"},
         },
         "optimization": {
-            "params": {
-                "maxiter": 200,
-                "g_convergence": 4.5E-4
-            },
-            "outputs": {
-                "gradient": False,
-                "vibrational_frequencies": False
-            },
+            "params": {"maxiter": 200, "g_convergence": 4.5e-4},
+            "outputs": {"gradient": False, "vibrational_frequencies": False},
         },
     },
-    "resources": {
-        "gpu_type": gpu_type
-    },
+    "resources": {"gpu_type": gpu_type},
 }
 
-prom = PromethiumClient(api_key=os.environ['PM_API_KEY'])
+prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
 go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
 go_workflow = prom.workflows.submit(go_payload)
 
@@ -144,7 +133,7 @@ print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}"
 print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
 
 go_results = prom.workflows.results(go_workflow.id)
-with open(f'{foldername}/{go_workflow.name}_results.json', 'w') as fp:
+with open(f"{foldername}/{go_workflow.name}_results.json", "w") as fp:
     fp.write(go_results.model_dump_json(indent=2))
 
 # Numeric results:
@@ -163,15 +152,12 @@ job_params = {
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {
-            "base64data": mol,
-            "filetype": "xyz"
-        },
+        "molecule": {"base64data": mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": 'def2-tzvp',
+                "basisname": "def2-tzvp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": 'b3lyp',
+                "xc_functional_name": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
@@ -181,32 +167,22 @@ job_params = {
                 "multiplicity": 1,
                 "charge": 0,
                 "g_convergence": 1.0e-6,
-                "print_level": 0
+                "print_level": 0,
             },
         },
         "pes": {
-            "params": {
-                "coordinate_system_name": "redundant"
-            },
+            "params": {"coordinate_system_name": "redundant"},
         },
         "optimization": {
-            "params": {
-                "maxiter": 200,
-                "g_convergence": 1.0e-4
-            },
-            "outputs": {
-                "gradient": False,
-                "vibrational_frequencies": False
-            },
+            "params": {"maxiter": 200, "g_convergence": 1.0e-4},
+            "outputs": {"gradient": False, "vibrational_frequencies": False},
         },
     },
-    "resources": {
-        "gpu_type": gpu_type
-    },
+    "resources": {"gpu_type": gpu_type},
 }
 
 spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
-print(f'Submitting {spc_name}...', end='')
+print(f"Submitting {spc_name}...", end="")
 spc_workflow = prom.workflows.submit(spc_payload)
 
 prom.workflows.wait(spc_workflow.id)
@@ -216,7 +192,7 @@ print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status
 print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
 
 spc_results = prom.workflows.results(spc_workflow.id)
-with open(f'{foldername}/{spc_workflow.name}_results.json', 'w') as fp:
+with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
 # Numeric results:

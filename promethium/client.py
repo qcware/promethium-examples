@@ -158,16 +158,14 @@ class PromethiumClient:
         self, base_url: Optional[str] = None, api_key: Optional[str] = None
     ) -> None:
         self.base_url = (
-            os.getenv("PROMETHIUM_API_BASE_URL", "https://api.promethium.qcware.com")
+            os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
             if base_url is None
             else base_url
         )
         self._client = Client(
             base_url=self.base_url,
             headers={
-                "X-API-KEY": os.environ["PROMETHIUM_API_KEY"]
-                if api_key is None
-                else api_key
+                "X-API-KEY": os.environ["PM_API_KEY"] if api_key is None else api_key
             },
         )
         self._workflows = Workflows(client=self.client)

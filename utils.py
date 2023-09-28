@@ -25,11 +25,10 @@ class LogEventType(str, Enum):
 def wait_for_workflows_to_complete(
     client,
     workflow_ids,
-    log_events = [],
-    interval = 10,
-    timeout = 3600,
-    ) -> dict:
-
+    log_events=[],
+    interval=10,
+    timeout=3600,
+) -> dict:
     def _should_log(state_change, log_events):
         return (
             "POLL" in log_events
@@ -67,4 +66,3 @@ def wait_for_workflows_to_complete(
             return responses
         time.sleep(interval)
     raise RuntimeError("Workflow polling error")
-

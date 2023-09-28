@@ -6,14 +6,15 @@ import os
 from utils import wait_for_workflows_to_complete
 
 
-foldername = 'output'
+foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(b"""
+mol = base64.b64encode(
+    b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -80,7 +81,8 @@ mol = base64.b64encode(b"""
     H         5.01368       -7.22264       -3.06214
     H         4.60618       -8.50157       -0.79514
     H         6.28295       -7.90612       -0.99587
-    O         3.42325       -5.20351       -2.69779""")
+    O         3.42325       -5.20351       -2.69779"""
+)
 
 mol = mol.decode("utf-8")
 
@@ -89,15 +91,12 @@ job_params = {
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
-        "molecule": {
-            "base64data": mol,
-            "filetype": "xyz"
-        },
+        "molecule": {"base64data": mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": 'def2-svp',
+                "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": 'b3lyp',
+                "xc_functional_name": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
@@ -107,46 +106,36 @@ job_params = {
                 "multiplicity": 1,
                 "charge": 0,
                 "g_convergence": 1.0e-6,
-                "print_level": 0
+                "print_level": 0,
             },
         },
         "pes": {
-            "params": {
-                "coordinate_system_name": "redundant"
-            },
+            "params": {"coordinate_system_name": "redundant"},
         },
         "optimization": {
-            "params": {
-                "maxiter": 200,
-                "g_convergence": 4.5E-4
-            },
-            "outputs": {
-                "gradient": False,
-                "vibrational_frequencies": False
-            },
+            "params": {"maxiter": 200, "g_convergence": 4.5e-4},
+            "outputs": {"gradient": False, "vibrational_frequencies": False},
         },
     },
-    "resources": {
-        "gpu_type": gpu_type
-    },
+    "resources": {"gpu_type": gpu_type},
 }
 
 headers = {
-    "x-api-key" : os.environ['PM_API_KEY'],
+    "x-api-key": os.environ["PM_API_KEY"],
     "accept": "application/json",
-    "content-type": "application/json"
+    "content-type": "application/json",
 }
 
 client = httpx.Client(base_url=base_url, headers=headers)
 
 payload = job_params
-jobname = payload['name']
-print(f'Submitting {jobname}...', end='')
+jobname = payload["name"]
+print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload, headers=headers)
-with open(f'{foldername}/{jobname}_submitted.json', 'w') as fp:
+with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
-print('done!')
+print("done!")
 
 workflow = wait_for_workflows_to_complete(
     client=client,
@@ -157,22 +146,24 @@ workflow = wait_for_workflows_to_complete(
 print(f"Workflow completed with status: {workflow['status']}")
 
 response = client.get(f"/v0/workflows/{workflow_id}", headers=headers).json()
-with open(f'{foldername}/{jobname}_status.json', 'w') as fp:
+with open(f"{foldername}/{jobname}_status.json", "w") as fp:
     fp.write(json.dumps(response))
-name = response['name']
-timetaken = response['duration_seconds']
-print(f'Name: {name}, time taken: {timetaken:.2f}s')
+name = response["name"]
+timetaken = response["duration_seconds"]
+print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
 response = client.get(f"/v0/workflows/{workflow_id}/results", headers=headers).json()
-with open(f'{foldername}/{jobname}_results.json', 'w') as fp:
+with open(f"{foldername}/{jobname}_results.json", "w") as fp:
     fp.write(json.dumps(response))
-energy = response['results']['optimization']['energy']
-mol = response['results']['artifacts']['optimized-molecule']['base64data']
+energy = response["results"]["optimization"]["energy"]
+mol = response["results"]["artifacts"]["optimized-molecule"]["base64data"]
 print(energy)
-print(base64.b64decode(mol).decode('utf-8'))
+print(base64.b64decode(mol).decode("utf-8"))
 
-response = client.get(f'/v0/workflows/{workflow_id}/results/download', follow_redirects=True)
-with open(f'{foldername}/{jobname}_results.zip', 'wb') as fp:
+response = client.get(
+    f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
+)
+with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
     fp.write(response.content)
 
 job_params = {
@@ -180,15 +171,12 @@ job_params = {
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {
-            "base64data": mol,
-            "filetype": "xyz"
-        },
+        "molecule": {"base64data": mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": 'def2-tzvp',
+                "basisname": "def2-tzvp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": 'b3lyp',
+                "xc_functional_name": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
@@ -198,38 +186,28 @@ job_params = {
                 "multiplicity": 1,
                 "charge": 0,
                 "g_convergence": 1.0e-6,
-                "print_level": 0
+                "print_level": 0,
             },
         },
         "pes": {
-            "params": {
-                "coordinate_system_name": "redundant"
-            },
+            "params": {"coordinate_system_name": "redundant"},
         },
         "optimization": {
-            "params": {
-                "maxiter": 200,
-                "g_convergence": 1.0e-4
-            },
-            "outputs": {
-                "gradient": False,
-                "vibrational_frequencies": False
-            },
+            "params": {"maxiter": 200, "g_convergence": 1.0e-4},
+            "outputs": {"gradient": False, "vibrational_frequencies": False},
         },
     },
-    "resources": {
-        "gpu_type": gpu_type
-    },
+    "resources": {"gpu_type": gpu_type},
 }
 
 payload = job_params
-jobname = payload['name']
-print(f'Submitting {jobname}...', end='')
+jobname = payload["name"]
+print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload)
-with open(f'{foldername}/{jobname}_submitted.json', 'w') as fp:
+with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
-print('done!')
+print("done!")
 
 workflow = wait_for_workflows_to_complete(
     client=client,
@@ -239,19 +217,21 @@ workflow = wait_for_workflows_to_complete(
 )[workflow_id]
 print(f"Workflow completed with status: {workflow['status']}")
 
-response = client.get(f'v0/workflows/{workflow_id}').json()
-with open(f'{foldername}/{jobname}_status.json', 'w') as fp:
+response = client.get(f"v0/workflows/{workflow_id}").json()
+with open(f"{foldername}/{jobname}_status.json", "w") as fp:
     fp.write(json.dumps(response))
-name = response['name']
-timetaken = response['duration_seconds']
-print(f'Name: {name}, time taken: {timetaken:.2f}s')
+name = response["name"]
+timetaken = response["duration_seconds"]
+print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
-response = client.get(f'/v0/workflows/{workflow_id}/results').json()
-with open(f'{foldername}/{jobname}_results.json', 'w') as fp:
+response = client.get(f"/v0/workflows/{workflow_id}/results").json()
+with open(f"{foldername}/{jobname}_results.json", "w") as fp:
     fp.write(json.dumps(response))
-energy = response['results']['rhf']['energy']
+energy = response["results"]["rhf"]["energy"]
 print(energy)
 
-response = client.get(f'/v0/workflows/{workflow_id}/results/download', follow_redirects=True)
-with open(f'{foldername}/{jobname}_results.zip', 'wb') as fp:
+response = client.get(
+    f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
+)
+with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
     fp.write(response.content)

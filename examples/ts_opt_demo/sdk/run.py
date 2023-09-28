@@ -6,14 +6,15 @@ from promethium.models import (
     CreateTransitionStateOptimizationWorkflowRequest,
 )
 
-foldername = 'output'
+foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(b"""
+mol = base64.b64encode(
+    b"""
   C -1.254249740 0.397846920 -0.466359900
   C -0.444130910 1.062523780 0.618694870
   H -0.172744960 2.104512570 0.468098900
@@ -26,7 +27,8 @@ mol = base64.b64encode(b"""
   H -1.006075790 0.765688840 -1.469513700
   H -2.081021580 1.057364780 -0.006261000
   H 1.429694710 0.407351920 1.319100730 
-""").decode("utf-8")
+"""
+).decode("utf-8")
 
 job_params = {
     "name": f"api_ts_opt",
@@ -39,11 +41,11 @@ job_params = {
         },
         "system": {
             "params": {
-                "basisname": 'def2-svp',
+                "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": 'b3lyp',
+                "xc_functional_name": "b3lyp",
                 "xc_grid_scheme": "SG1",
-                "threshold_pq": 1.0e-12
+                "threshold_pq": 1.0e-12,
             },
         },
         "hf": {
@@ -51,7 +53,7 @@ job_params = {
                 "multiplicity": 1,
                 "charge": 0,
                 "g_convergence": 1.0e-6,
-                "print_level": 0
+                "print_level": 0,
             },
         },
         "pes": {
@@ -65,17 +67,13 @@ job_params = {
                 "strict_convergence": True,
                 "eigenvector_convergence": 1e-4,
             },
-            "outputs": {
-                "vibrational_frequencies": True
-            },
+            "outputs": {"vibrational_frequencies": True},
         },
     },
-    "resources": {
-        "gpu_type": gpu_type
-    },
+    "resources": {"gpu_type": gpu_type},
 }
 
-prom = PromethiumClient(api_key=os.environ['PM_API_KEY'])
+prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
 payload = CreateTransitionStateOptimizationWorkflowRequest(**job_params)
 workflow = prom.workflows.submit(payload)
 
@@ -86,7 +84,7 @@ print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
 spc_results = prom.workflows.results(workflow.id)
-with open(f'{foldername}/{workflow.name}_results.json', 'w') as fp:
+with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
 # Optimized molecule:
