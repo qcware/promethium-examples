@@ -96,7 +96,7 @@ job_params = {
                 "rk_thresh": 1.0e-2,
                 "integrator": "rk45",
                 "dt": 0.01,
-                "nbeads": 11,
+                "nbeads": 10,
             }
         },
         "neb": {"params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01}},
