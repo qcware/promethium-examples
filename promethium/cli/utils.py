@@ -1,0 +1,88 @@
+import os
+import typing
+import pathlib
+import configparser
+
+import click
+
+from promethium.cli.constants import BASE_URL, CONFIG_FILENAME
+from promethium.client import Files, Workflows, PromethiumClient
+
+
+def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
+    config = configparser.ConfigParser()
+    if not config.read(config_dir.joinpath(CONFIG_FILENAME)):
+        write_config_value("Connection", "base_url", BASE_URL)
+
+
+def read_config(config_dir: pathlib.Path = pathlib.Path.home()) -> dict:
+    config = configparser.ConfigParser()
+    config.read(config_dir.joinpath(CONFIG_FILENAME))
+    return config._sections
+
+
+def write_config_value(
+    section: str,
+    key: str,
+    value: str,
+    config_dir: pathlib.Path = pathlib.Path.home(),
+) -> None:
+    config = configparser.ConfigParser()
+    configpath = config_dir.joinpath(CONFIG_FILENAME)
+    config.read(configpath)
+    config[section] = {}
+    config[section][key] = value
+    with open(config_dir.joinpath(CONFIG_FILENAME), "w") as configfile:
+        config.write(configfile)
+
+
+def _get_api_key_from_config(config: dict) -> typing.Optional[str]:
+    if config:
+        if creds := config.get("Credentials"):
+            return creds.get("api_key")
+    return None
+
+
+def _get_base_url_from_config(config: dict) -> typing.Optional[str]:
+    if config:
+        if creds := config.get("Connection"):
+            return creds.get("base_url")
+    return None
+
+
+def get_api_key(ctx: click.Context, value: typing.Any) -> str:
+    api_key = (
+        value or os.environ.get("PM_API_KEY") or _get_api_key_from_config(read_config())
+    )
+    if not api_key:
+        click.echo(
+            """
+Promethium API key not found. API keys are set in the following order of precedence:
+    1. Run this script with the `--api-key` or `-k` option.
+    2. Set the `PM_API_KEY` environment variable.
+    3. Run `promethium config credentials` and follow the prompt."""
+        )
+        ctx.exit(1)
+    return api_key
+
+
+def get_base_url(ctx: click.Context, value: typing.Any) -> str:
+    base_url = (
+        value
+        or os.environ.get("PM_BASE_URL")
+        or _get_base_url_from_config(read_config())
+    )
+    if not base_url:
+        click.echo(
+            """
+Promethium Base URL not found. The Base URL is set in the following order of precedence:
+    1. Run this script with the `--base-url` or `-b` option.
+    2. Set the `PM_BASE_URL` environment variable.
+    3. Run `promethium config base-url` and follow the prompt."""
+        )
+        ctx.exit(1)
+    return base_url
+
+
+def get_client_from_context(ctx: click.Context) -> PromethiumClient:
+    return ctx.obj["client"]
