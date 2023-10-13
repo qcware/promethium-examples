@@ -1,6 +1,6 @@
 from functools import partial
 import os
-from typing import Generator, Optional, Type, Union
+from typing import Generator, Optional, Type, Union, List
 from uuid import UUID
 
 from httpx import Client, HTTPStatusError
@@ -13,6 +13,9 @@ from promethium.models import (
     WorkflowKind,
     WorkflowResult,
     WorkflowStatus,
+    UpdateFileRequest,
+    CreateSimpleFileRequest,
+    CreateDirectoryRequest,
 )
 from promethium.utils import (
     wait_for_workflows_to_complete,
@@ -52,10 +55,10 @@ class Files(BaseResource):
     def metadata_from_items(cls, items: list[dict]) -> list[FileMetadata]:
         return [FileMetadata(**file) for file in items]
 
-    def metadata(self, id: UUID4) -> Union[str, bytes]:
+    def metadata(self, id: UUID4) -> FileMetadata:
         response = self._client.get(f"/v0/files/{id}")
         self._handle_response(response)
-        return response.json()
+        return FileMetadata(**response.json())
 
     def download(self, id: UUID4) -> Union[str, bytes]:
         response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
@@ -63,13 +66,22 @@ class Files(BaseResource):
         return response.content
 
     def list(
-        self, page: Optional[int] = None, size: int = 10
+        self,
+        page: Optional[int] = None,
+        size: int = 10,
+        parent_id: Optional[UUID4] = None,
+        search: Optional[str] = None,
     ) -> Union[Generator, list[FileMetadata]]:
         iterate = page is None
         page = 1 if page is None else page
         total = page * size + 1
         while (page - 1) * size < total:
-            response = self._client.get("/v0/files", params={"page": page})
+            params = dict(page=page, size=size)
+            if parent_id:
+                params.update(parent_id=str(parent_id))
+            if search:
+                params.update(search=search)
+            response = self._client.get("/v0/files", params=params)
             self._handle_response(response)
             page_json = response.json()
             if not iterate:
@@ -77,6 +89,41 @@ class Files(BaseResource):
             yield self.metadata_from_items(page_json["items"])
             page += 1
             total = page_json["total"]
+
+    def delete(self, id: UUID4) -> None:
+        response = self._client.delete(f"/v0/files/{id}")
+        self._handle_response(response)
+
+    def update(self, id: UUID4, update: UpdateFileRequest) -> FileMetadata:
+        response = self._client.patch(
+            f"/v0/files/{id}",
+            data=update.model_dump_json(exclude_none=True, exclude_unset=True),
+        )
+        self._handle_response(response)
+        return FileMetadata(**response.json())
+
+    def create(
+        self, create: Union[CreateSimpleFileRequest, CreateDirectoryRequest]
+    ) -> FileMetadata:
+        response = self._client.post(
+            "/v0/files",
+            data=create.model_dump_json(exclude_none=True, exclude_unset=True),
+        )
+        self._handle_response(response)
+        return FileMetadata(**response.json())
+
+    def create_batch(
+        self, batch: List[Union[CreateSimpleFileRequest, CreateDirectoryRequest]]
+    ) -> List[FileMetadata]:
+        response = self._client.post(
+            "/v0/files/batch",
+            json=[
+                item.model_dump(mode="json", exclude_none=True, exclude_unset=True)
+                for item in batch
+            ],
+        )
+        self._handle_response(response)
+        return [FileMetadata(**item) for item in response.json()]
 
 
 class Workflows(BaseResource):
