@@ -20,7 +20,7 @@ def file(ctx: click.Context, file_id: uuid.UUID):
     """
     Get metadata for the file or directory specified by FILE_ID.
     """
-    metadata = get_client_from_context(ctx).files.metadata(file_id)
+    metadata = get_client_from_context(ctx).files.file(file_id)
     click.echo(json.dumps(metadata.model_dump(mode="json"), indent=2))
 
 
@@ -33,13 +33,8 @@ def ls(ctx: click.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
     List the contents of the directory specified by DIR_ID. If DIR_ID
     is not provided, then all files will be listed.
     """
-    page_gen = get_client_from_context(ctx).files.ls(parent_id=dir_id, search=search)
-    contents = []
-    for page in page_gen:
-        contents.extend(page)
-    click.echo(
-        json.dumps([item.model_dump(mode="json") for item in contents], indent=2)
-    )
+    res = get_client_from_context(ctx).files.ls(parent_id=dir_id, search=search)
+    click.echo(json.dumps([item.model_dump(mode="json") for item in res], indent=2))
 
 
 @files.command(short_help="Move a file to a directory.")

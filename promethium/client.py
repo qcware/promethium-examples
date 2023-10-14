@@ -55,19 +55,22 @@ class Files(BaseResource):
         self._handle_response = partial(
             handle_response, not_found_exception=FileNotFound
         )
-        self.ls = self.list
-        self.rm = self.delete
-        self.dl = self.download
-        self.ul = self.upload
 
     @classmethod
     def metadata_from_items(cls, items: list[dict]) -> list[FileMetadata]:
         return [FileMetadata(**file) for file in items]
 
+    # API
+
     def metadata(self, id: UUID4) -> FileMetadata:
         response = self._client.get(f"/v0/files/{id}")
         self._handle_response(response)
         return FileMetadata(**response.json())
+
+    def download(self, id: UUID4) -> Union[str, bytes]:
+        response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
+        self._handle_response(response)
+        return response.content
 
     def list(
         self,
@@ -129,26 +132,29 @@ class Files(BaseResource):
         response = self._client.delete(f"/v0/files/{id}")
         self._handle_response(response)
 
-    def mv(self, id, new_parent_id: Optional[UUID4] = None) -> FileMetadata:
-        return self.update(id, UpdateFileRequest(parent_id=new_parent_id))
+    # FILESYSTEM OPS
+
+    def file(self, id: UUID4) -> FileMetadata:
+        return self.metadata(id)
+
+    def ls(
+        self,
+        parent_id: Optional[UUID4] = None,
+        search: Optional[str] = None,
+    ) -> Union[Generator, List[FileMetadata]]:
+        page_gen = self.list(parent_id=parent_id, search=search)
+        contents = []
+        for page in page_gen:
+            contents.extend(page)
+        return contents
 
     def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
         return self.create(
             CreateDirectoryRequest(name=name, parent_id=parent_id, is_directory=True)
         )
 
-    def download(self, id: UUID4) -> Union[str, bytes]:
-        response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
-        self._handle_response(response)
-        return response.content
-
-    def upload(
-        self, data: Union[CreateSimpleFileRequest, List[CreateSimpleFileRequest]]
-    ) -> Union[FileMetadata, List[FileMetadata]]:
-        if isinstance(data, List):
-            return self.create_batch(data)
-        elif isinstance(data, CreateSimpleFileRequest):
-            return self.create(data)
+    def mv(self, id, new_parent_id: Optional[UUID4] = None) -> FileMetadata:
+        return self.update(id, UpdateFileRequest(parent_id=new_parent_id))
 
     def rcp(  # NOSONAR
         self, src: Union[UUID4, pathlib.Path], dest: Union[UUID4, pathlib.Path]
@@ -192,11 +198,14 @@ class Files(BaseResource):
                     )
                 ]
             )
-            return self.upload(to_upload)
+            return self.create_batch(to_upload)
         else:
             raise ValueError(
                 "One of src and dest must be a UUID and the other must be a filesystem path"
             )
+
+    def rm(self, id: UUID4) -> None:
+        return self.delete(id)
 
 
 class Workflows(BaseResource):
