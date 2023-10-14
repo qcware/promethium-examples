@@ -1,17 +1,10 @@
 import json
 import uuid
 import typing
-import pathlib
 
 import click
 
-from promethium.cli.utils import get_client_from_context
-from promethium.models import (
-    CreateSimpleFileRequest,
-    CreateDirectoryRequest,
-    UpdateFileRequest,
-)
-from promethium.utils import base64encode
+from promethium.cli.utils import get_client_from_context, validate_uuid_or_path
 
 
 @click.group(help="Manage your files.")
@@ -23,37 +16,12 @@ def files(ctx: click.Context):  # NOSONAR
 @files.command(short_help="Get metadata for a file or directory.")
 @click.argument("file_id", type=click.UUID)
 @click.pass_context
-def data(ctx: click.Context, file_id: uuid.UUID):
+def file(ctx: click.Context, file_id: uuid.UUID):
     """
     Get metadata for the file or directory specified by FILE_ID.
     """
     metadata = get_client_from_context(ctx).files.metadata(file_id)
     click.echo(json.dumps(metadata.model_dump(mode="json"), indent=2))
-
-
-@files.command(short_help="Download file data.")
-@click.argument("file_id", type=click.UUID)
-@click.option(
-    "--output-dir",
-    "-o",
-    type=click.Path(
-        path_type=pathlib.Path, exists=True, file_okay=False, dir_okay=True
-    ),
-)
-@click.pass_context
-def get(
-    ctx: click.Context, file_id: uuid.UUID, output_dir: typing.Optional[pathlib.Path]
-):
-    """
-    Get file contents from FILE_ID. If --output-dir is not specified,
-    print the contents of the file to stdout.
-    """
-    data = get_client_from_context(ctx).files.download(file_id)
-    if output_dir:
-        metadata = get_client_from_context(ctx).files.metadata(file_id)
-        output_dir.joinpath(metadata.name).write_bytes(data)
-    else:
-        click.echo(data)
 
 
 @files.command(short_help="List the contents of a directory.")
@@ -65,7 +33,7 @@ def ls(ctx: click.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
     List the contents of the directory specified by DIR_ID. If DIR_ID
     is not provided, then all files will be listed.
     """
-    page_gen = get_client_from_context(ctx).files.list(parent_id=dir_id, search=search)
+    page_gen = get_client_from_context(ctx).files.ls(parent_id=dir_id, search=search)
     contents = []
     for page in page_gen:
         contents.extend(page)
@@ -84,9 +52,7 @@ def mv(ctx: click.Context, src_id: uuid.UUID, dir_id: uuid.UUID):
     specified by DIR_ID. If DIR_ID is not provided, then the file will
     be moved to the root directory.
     """
-    update = get_client_from_context(ctx).files.update(
-        src_id, UpdateFileRequest(parent_id=dir_id)
-    )
+    update = get_client_from_context(ctx).files.mv(src_id, dir_id)
     click.echo(json.dumps(update.model_dump(mode="json"), indent=2))
 
 
@@ -100,51 +66,43 @@ def mkdir(ctx: click.Context, name: str, dir_id: uuid.UUID):
     is not provided, then the new directory will be created in the
     user's root directory.
     """
-    directory = get_client_from_context(ctx).files.create(
-        CreateDirectoryRequest(name=name, parent_id=dir_id, is_directory=True)
-    )
+    directory = get_client_from_context(ctx).files.mkdir(name, dir_id)
     click.echo(json.dumps(directory.model_dump(mode="json"), indent=2))
 
 
-@files.command(short_help="Upload file(s) from the local filesystem.")
+@files.command(
+    short_help="Remote copy files between Promethium and the local filesystem.",
+    context_settings={"ignore_unknown_options": True},
+)
 @click.argument(
     "src",
-    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
-@click.argument("dir_id", type=click.UUID, required=False)
+@click.argument(
+    "dest",
+)
 @click.pass_context
-def cp(ctx: click.Context, src: pathlib.Path, dir_id: uuid.UUID):
+def rcp(
+    ctx: click.Context,
+    src: str,
+    dest: str,
+):
     """
-    Copy local file or directory contents at SRC to the directory with
-    DIR_ID. If DIR_ID is not provided, then the files will be created
-    in the user's root directory. Note: files with unsupported extensions
-    will not be uploaded.
+    Remote copy files between Promethium and the local filesystem.
+
+    If SRC is a Promethium File ID, the file will be downloaded to
+    the directory at DEST. If SRC is a directory, the zipped contents
+    of the directory will be downloaded to DEST.
+
+    If SRC is a local file, the file will be uploaded to the Promethium
+    directory ID specified at DEST. If SRC is a local directory, then
+    its contents will be uploaded to DEST. Only files with supported
+    extensions will be uploaded.
     """
-    client = get_client_from_context(ctx)
-    if src.is_file():
-        file = client.files.create(
-            CreateSimpleFileRequest(
-                name=src.name,
-                parent_id=dir_id,
-                base64body=base64encode(src.read_bytes()),
-                is_directory=False,
-            )
-        )
-        output = file.model_dump(mode="json")
-    elif src.is_dir():
-        files = [
-            CreateSimpleFileRequest(
-                name=file.name,
-                parent_id=dir_id,
-                base64body=base64encode(file.read_bytes()),
-                is_directory=False,
-            )
-            for file in src.iterdir()
-            if file.is_file()
-        ]
-        batch = client.files.create_batch(files)
-        output = [item.model_dump(mode="json") for item in batch]
-    click.echo(json.dumps(output, indent=2))
+    res = get_client_from_context(ctx).files.rcp(
+        validate_uuid_or_path(src), validate_uuid_or_path(dest)
+    )
+    if res:
+        click.echo(json.dumps([item.model_dump(mode="json") for item in res], indent=2))
 
 
 @files.command(short_help="Delete a file or directory.")
@@ -155,7 +113,7 @@ def cp(ctx: click.Context, src: pathlib.Path, dir_id: uuid.UUID):
 @click.pass_context
 def rm(ctx: click.Context, resource_id: uuid.UUID):
     """
-    Delete the file or directory specified by RESOURCE_ID
+    Delete the file or directory specified by RESOURCE_ID.
     """
-    get_client_from_context(ctx).files.delete(resource_id)
-    click.echo(json.dumps(dict(resource_id=str(resource_id))))
+    get_client_from_context(ctx).files.rm(resource_id)
+    click.echo(str(resource_id))

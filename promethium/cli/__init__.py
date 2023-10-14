@@ -9,8 +9,6 @@ from promethium.cli.workflows import workflows
 from promethium.cli.utils import get_api_key, get_base_url, ensure_config
 from promethium.client import PromethiumClient, Workflows, Files
 
-# sys.tracebacklimit = 0
-
 VERSION = pkg_resources.get_distribution("promethium").version
 
 

@@ -1,4 +1,5 @@
 import os
+import uuid
 import typing
 import pathlib
 import configparser
@@ -6,7 +7,9 @@ import configparser
 import click
 
 from promethium.cli.constants import BASE_URL, CONFIG_FILENAME
-from promethium.client import Files, Workflows, PromethiumClient
+from promethium.client import PromethiumClient
+
+# from promethium.filesys_utils import is_pathname_valid
 
 
 def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
@@ -86,3 +89,11 @@ Promethium Base URL not found. The Base URL is set in the following order of pre
 
 def get_client_from_context(ctx: click.Context) -> PromethiumClient:
     return ctx.obj["client"]
+
+
+def validate_uuid_or_path(value: str) -> typing.Union[uuid.UUID, pathlib.Path]:
+    try:
+        return uuid.UUID(value)
+    except ValueError:
+        pass
+    return pathlib.Path(value)

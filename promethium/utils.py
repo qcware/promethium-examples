@@ -1,14 +1,24 @@
+import time
 import base64
 import binascii
-from datetime import datetime
+import warnings
 from enum import Enum
-import time
+from datetime import datetime
 from typing import Optional, Union
 
 from httpx import Client
 from pydantic import UUID4
 
 from promethium.exceptions import ClientError
+from promethium.models import ValidFileExtensions, CreateSimpleFileRequest
+
+
+def _custom_formatwarning(msg, *args, **kwargs):
+    # ignore everything except the message
+    return f"UserWarning: {msg}\n"
+
+
+warnings.formatwarning = _custom_formatwarning
 
 
 NON_TERMINAL_STATUSES = ["RUNNING"]
@@ -83,3 +93,20 @@ def wait_for_workflows_to_complete(
             return responses
         time.sleep(interval)
     raise ClientError("Error waiting for workflows to complete")
+
+
+def has_valid_file_extension(filename: str) -> bool:
+    extension = filename.split(".")[-1]
+    return extension in [ext.value for ext in ValidFileExtensions]
+
+
+def filter_unsupported_extensions(
+    files: list[CreateSimpleFileRequest],
+) -> list[CreateSimpleFileRequest]:
+    filtered_list = []
+    for file in files:
+        if has_valid_file_extension(file.name):
+            filtered_list.append(file)
+        else:
+            warnings.warn(f"Unsupported file type: {file.name}", stacklevel=0)
+    return filtered_list

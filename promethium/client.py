@@ -1,7 +1,9 @@
-from functools import partial
 import os
-from typing import Generator, Optional, Type, Union, List
+import pathlib
 from uuid import UUID
+from warnings import warn
+from functools import partial
+from typing import Generator, Optional, Type, Union, List
 
 from httpx import Client, HTTPStatusError
 from pydantic import UUID4
@@ -19,9 +21,12 @@ from promethium.models import (
 )
 from promethium.utils import (
     wait_for_workflows_to_complete,
+    filter_unsupported_extensions,
+    base64encode,
     TERMINAL_STATUSES,
     NON_TERMINAL_STATUSES,
 )
+from promethium.filesys_utils import is_path_exists_or_creatable_portable
 
 
 def handle_response(response, not_found_exception: Type):
@@ -50,6 +55,10 @@ class Files(BaseResource):
         self._handle_response = partial(
             handle_response, not_found_exception=FileNotFound
         )
+        self.ls = self.list
+        self.rm = self.delete
+        self.dl = self.download
+        self.ul = self.upload
 
     @classmethod
     def metadata_from_items(cls, items: list[dict]) -> list[FileMetadata]:
@@ -59,11 +68,6 @@ class Files(BaseResource):
         response = self._client.get(f"/v0/files/{id}")
         self._handle_response(response)
         return FileMetadata(**response.json())
-
-    def download(self, id: UUID4) -> Union[str, bytes]:
-        response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
-        self._handle_response(response)
-        return response.content
 
     def list(
         self,
@@ -89,10 +93,6 @@ class Files(BaseResource):
             yield self.metadata_from_items(page_json["items"])
             page += 1
             total = page_json["total"]
-
-    def delete(self, id: UUID4) -> None:
-        response = self._client.delete(f"/v0/files/{id}")
-        self._handle_response(response)
 
     def update(self, id: UUID4, update: UpdateFileRequest) -> FileMetadata:
         response = self._client.patch(
@@ -124,6 +124,79 @@ class Files(BaseResource):
         )
         self._handle_response(response)
         return [FileMetadata(**item) for item in response.json()]
+
+    def delete(self, id: UUID4) -> None:
+        response = self._client.delete(f"/v0/files/{id}")
+        self._handle_response(response)
+
+    def mv(self, id, new_parent_id: Optional[UUID4] = None) -> FileMetadata:
+        return self.update(id, UpdateFileRequest(parent_id=new_parent_id))
+
+    def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
+        return self.create(
+            CreateDirectoryRequest(name=name, parent_id=parent_id, is_directory=True)
+        )
+
+    def download(self, id: UUID4) -> Union[str, bytes]:
+        response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
+        self._handle_response(response)
+        return response.content
+
+    def upload(
+        self, data: Union[CreateSimpleFileRequest, List[CreateSimpleFileRequest]]
+    ) -> Union[FileMetadata, List[FileMetadata]]:
+        if isinstance(data, List):
+            return self.create_batch(data)
+        elif isinstance(data, CreateSimpleFileRequest):
+            return self.create(data)
+
+    def rcp(  # NOSONAR
+        self, src: Union[UUID4, pathlib.Path], dest: Union[UUID4, pathlib.Path]
+    ) -> Optional[FileMetadata]:
+        if isinstance(src, UUID) and isinstance(dest, pathlib.Path):
+            if not dest.is_dir:
+                raise ValueError("Destination path is not a directory")
+            if not is_path_exists_or_creatable_portable(str(dest)):
+                raise ValueError("Destination path does not exist or is not creatable")
+            data = self.download(src)
+            src_metadata = self.metadata(src)
+            filename = src_metadata.name
+            if src_metadata.is_directory:
+                filename += ".zip"
+            with open(dest.joinpath(filename), "wb") as outfile:
+                outfile.write(data)
+        elif isinstance(src, pathlib.Path) and isinstance(dest, UUID):
+            dest_metadata = self.metadata(dest)
+            if not dest_metadata.is_directory:
+                raise ValueError("Destination is not a directory")
+            if not is_path_exists_or_creatable_portable(str(src)):
+                raise ValueError("Source path is not a file or directory")
+            to_upload = filter_unsupported_extensions(
+                [
+                    CreateSimpleFileRequest(
+                        name=file.name,
+                        parent_id=dest,
+                        is_directory=False,
+                        base64body=base64encode(file.read_bytes()),
+                    )
+                    for file in src.iterdir()
+                    if file.is_file()
+                ]
+                if src.is_dir()
+                else [
+                    CreateSimpleFileRequest(
+                        name=src.name,
+                        parent_id=dest,
+                        is_directory=False,
+                        base64body=base64encode(src.read_bytes()),
+                    )
+                ]
+            )
+            return self.upload(to_upload)
+        else:
+            raise ValueError(
+                "One of src and dest must be a UUID and the other must be a filesystem path"
+            )
 
 
 class Workflows(BaseResource):
