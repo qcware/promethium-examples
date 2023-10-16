@@ -37,8 +37,13 @@ def base_url():
 
 
 @pytest.fixture
-def client(base_url):
-    pc = PromethiumClient(base_url=base_url)
+def fake_api_key():
+    return "i-am-not-a-real-api-key"
+
+
+@pytest.fixture
+def client(base_url, fake_api_key):
+    pc = PromethiumClient(base_url=base_url, api_key=fake_api_key)
     yield pc
 
 
