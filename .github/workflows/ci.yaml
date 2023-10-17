@@ -1,0 +1,111 @@
+name: CI pipeline for the Promethium SDK
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-tests:
+    name: Run unit tests
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root --with dev
+
+      - name: Run tests
+        run: pytest --cov=promethium --cov-report=xml --cov-report=term --cov-branch --junit-xml=test-report.xml
+        env:
+          PYTHONPATH: "."
+
+      - name: Override Coverage Source Path for Sonar
+        # This is required due to volume mounting on runners. The mount is:
+        # -v "/home/runner/work/promethium/promethium":"/github/workspace"
+        # for the SonarCloud scan, so the coverage reports need to update the root source path,
+        # the below does that:
+        run: |
+          sed -i "s/<source>\/home\/runner\/work\/promethium\/promethium/<source>\/github\/workspace/g" /home/runner/work/promethium-examples/promethium-examples/coverage.xml
+
+      # Upload testing artifacts:
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /home/runner/work/promethium-examples/promethium-examples/coverage.xml
+            /home/runner/work/promethium-examples/promethium-examples/test-report.xml
+          if-no-files-found: "warn"
+          retention-days: 21
+
+  build:
+    name: Build Promethium SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root
+
+      - name: Build package
+        run: poetry build
+
+      # Upload testing artifacts:
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /home/runner/work/promethium-examples/promethium-examples/dist/promethium-*-py3-none-any.whl
+            /home/runner/work/promethium-examples/promethium-examples/dist/promethium-*-tar.gz
+          if-no-files-found: "warn"
+          retention-days: 21
+
+  sonar:
+    name: Run sonarcloud scanning and test parsing
+    runs-on: ubuntu-20.04
+    if: ${{ always() }}
+    needs:
+      [
+        unit-tests,
+      ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Download testing artifacts:
+      - name: Download testing artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /home/runner/work/promethium-examples/promethium-examples/coverage.xml
+            /home/runner/work/promethium-examples/promethium-examples/test-report.xml
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
