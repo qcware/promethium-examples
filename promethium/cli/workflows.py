@@ -193,8 +193,8 @@ def new(
     Workflow's complete results will be downloaded to the directory specified.
     """
     workflow_definition = CreateWorkflowParams(
-        workflow_definition=json.loads(input_file_path.read_text())
-    ).workflow_definition
+        request=json.loads(input_file_path.read_text())
+    ).request
     client = get_client_from_context(ctx)
     workflow = client.workflows.submit(workflow_definition)
     if not wait:

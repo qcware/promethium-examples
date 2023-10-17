@@ -62,7 +62,7 @@ class ListWorkflowParams(BaseModel):
 
 
 class CreateWorkflowParams(BaseModel):
-    workflow_definition: Union[
+    request: Union[
         CreateTorsionScanWorkflowRequest,
         CreateConformerSearchWorkflowRequest,
         CreateGeometryOptimizationWorkflowRequest,
