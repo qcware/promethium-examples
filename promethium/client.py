@@ -1,23 +1,32 @@
 import os
 import pathlib
 from uuid import UUID
-from warnings import warn
 from functools import partial
-from typing import Generator, Optional, Type, Union, List
+from typing import Iterator, Optional, Type, Union, List
 
 from httpx import Client, HTTPStatusError
 from pydantic import UUID4
 
 from promethium.exceptions import FileNotFound, WorkflowNotFound
 from promethium.models import (
-    FileMetadata,
     Workflow,
+    FileMetadata,
+    PageWorkflow,
     WorkflowKind,
     WorkflowResult,
     WorkflowStatus,
     UpdateFileRequest,
-    CreateSimpleFileRequest,
+    ListWorkflowParams,
     CreateDirectoryRequest,
+    CreateSimpleFileRequest,
+    CreateTorsionScanWorkflowRequest,
+    CreateConformerSearchWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
+    CreateSinglePointCalculationWorkflowRequest,
+    CreateReactionPathOptimizationWorkflowRequest,
+    CreateTransitionStateOptimizationWorkflowRequest,
+    CreateInteractionEnergyCalculationWorkflowRequest,
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
 )
 from promethium.utils import (
     wait_for_workflows_to_complete,
@@ -78,7 +87,7 @@ class Files(BaseResource):
         size: int = 10,
         parent_id: Optional[UUID4] = None,
         search: Optional[str] = None,
-    ) -> Union[Generator, list[FileMetadata]]:
+    ) -> Union[Iterator[List[FileMetadata]], List[FileMetadata]]:
         iterate = page is None
         page = 1 if page is None else page
         total = page * size + 1
@@ -141,7 +150,7 @@ class Files(BaseResource):
         self,
         parent_id: Optional[UUID4] = None,
         search: Optional[str] = None,
-    ) -> Union[Generator, List[FileMetadata]]:
+    ) -> Union[Iterator, List[FileMetadata]]:
         page_gen = self.list(parent_id=parent_id, search=search)
         contents = []
         for page in page_gen:
@@ -215,38 +224,46 @@ class Workflows(BaseResource):
             handle_response, not_found_exception=WorkflowNotFound
         )
 
+    @classmethod
+    def from_items(cls, items: list[dict]) -> list[Workflow]:
+        return [Workflow(**workflow) for workflow in items]
+
+    # API
+
     def get(self, id: UUID4) -> Workflow:
         workflow_response = self._client.get(f"/v0/workflows/{id}")
         self._handle_response(workflow_response)
         return Workflow(**workflow_response.json())
 
-    @classmethod
-    def from_items(cls, items: list[dict]) -> list[Workflow]:
-        return [Workflow(**workflow) for workflow in items]
-
     def status(self, id: UUID4) -> WorkflowStatus:
         return self.get(id).status
 
-    def list(
-        self, kind: WorkflowKind, page: Optional[int] = None, size: int = 10
-    ) -> Union[Generator, list[Workflow]]:
-        iterate = page is None
-        page = 1 if page is None else page
-        total = page * size + 1
-        while (page - 1) * size < total:
-            response = self._client.get(
-                "/v0/workflows", params={"kind": kind.value, "page": page}
-            )
-            self._handle_response(response)
-            page_json = response.json()
-            if not iterate:
-                return self.from_items(page_json["items"])
-            yield self.from_items(page_json["items"])
-            page += 1
-            total = page_json["total"]
+    def list(self, params: ListWorkflowParams) -> PageWorkflow:
+        resp = self._client.get(
+            "/v0/workflows",
+            params=params.model_dump(
+                mode="json", exclude_none=True, exclude_unset=True
+            ),
+        )
+        self._handle_response(resp)
+        return PageWorkflow(**resp.json())
 
-    def submit(self, workflow_request) -> Workflow:
-        payload = workflow_request.json(exclude_unset=True, exclude_none=True)
+    def submit(
+        self,
+        workflow_request: Union[
+            CreateTorsionScanWorkflowRequest,
+            CreateConformerSearchWorkflowRequest,
+            CreateGeometryOptimizationWorkflowRequest,
+            CreateSinglePointCalculationWorkflowRequest,
+            CreateReactionPathOptimizationWorkflowRequest,
+            CreateTransitionStateOptimizationWorkflowRequest,
+            CreateInteractionEnergyCalculationWorkflowRequest,
+            CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+        ],
+    ) -> Workflow:
+        payload = workflow_request.model_dump_json(
+            exclude_unset=True, exclude_none=True
+        )
         response = self._client.post("/v0/workflows", data=payload)
         response.raise_for_status()
         return Workflow(**response.json())
@@ -265,12 +282,12 @@ class Workflows(BaseResource):
         response = self._client.post(f"/v0/workflows/{id}/stop")
         self._handle_response(response)
 
-    def download(self, id: UUID4, path: Optional[str] = None) -> None:
-        path = os.getcwd() if path is None else path
+    def download(self, id: UUID4) -> Union[str, bytes]:
         response = self._client.get(
             f"/v0/workflows/{id}/results/download", follow_redirects=True
         )
         self._handle_response(response)
+        return response.content
 
     def delete(self, id: UUID4) -> None:
         """Deletes a workflow, or raises if it doesn't exist,

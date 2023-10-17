@@ -1,13 +1,14 @@
 import sys
 import pkg_resources
 
+import cloup
 import click
 
 from promethium.cli.config import config
 from promethium.cli.files import files
 from promethium.cli.workflows import workflows
 from promethium.cli.utils import get_api_key, get_base_url, ensure_config
-from promethium.client import PromethiumClient, Workflows, Files
+from promethium.client import PromethiumClient
 
 VERSION = pkg_resources.get_distribution("promethium").version
 
@@ -19,8 +20,11 @@ def _print_version(ctx, _, value):
     ctx.exit()
 
 
-@click.group(help="Command Line Interface (CLI) for Promethium by QC Ware")
-@click.option(
+@cloup.group(
+    help="Command Line Interface (CLI) for Promethium by QC Ware",
+    show_subcommand_aliases=True,
+)
+@cloup.option(
     "--version",
     "-v",
     is_flag=True,
@@ -29,9 +33,9 @@ def _print_version(ctx, _, value):
     expose_value=False,
     is_eager=True,
 )
-@click.option("--api-key", "-k", help="Set Promethium API Key.")
-@click.option("--base-url", "-b", help="Set Promethium Base URL.", hidden=True)
-@click.option(
+@cloup.option("--api-key", "-k", help="Set Promethium API Key.")
+@cloup.option("--base-url", "-b", help="Set Promethium Base URL.", hidden=True)
+@cloup.option(
     "--show-tracebacks",
     "-t",
     help="Show error tracebacks",
@@ -39,8 +43,8 @@ def _print_version(ctx, _, value):
     default=False,
     is_flag=True,
 )
-@click.pass_context
-def run(ctx: click.Context, api_key: str, base_url: str, show_tracebacks: bool):
+@cloup.pass_context
+def run(ctx: cloup.Context, api_key: str, base_url: str, show_tracebacks: bool):
     if not show_tracebacks:
         sys.tracebacklimit = 0
     ensure_config()

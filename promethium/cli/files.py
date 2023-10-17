@@ -2,21 +2,22 @@ import json
 import uuid
 import typing
 
+import cloup
 import click
 
 from promethium.cli.utils import get_client_from_context, validate_uuid_or_path
 
 
-@click.group(help="Manage your files.")
-@click.pass_context
-def files(ctx: click.Context):  # NOSONAR
+@cloup.group(help="Manage your files.", show_subcommand_aliases=True, aliases=["fs"])
+@cloup.pass_context
+def files(ctx: cloup.Context):  # NOSONAR
     ...
 
 
-@files.command(short_help="Get metadata for a file or directory.")
-@click.argument("file_id", type=click.UUID)
-@click.pass_context
-def file(ctx: click.Context, file_id: uuid.UUID):
+@files.command(short_help="Get metadata for a file or directory.", aliases=["r"])
+@cloup.argument("file_id", type=cloup.UUID)
+@cloup.pass_context
+def read(ctx: cloup.Context, file_id: uuid.UUID):
     """
     Get metadata for the file or directory specified by FILE_ID.
     """
@@ -25,10 +26,15 @@ def file(ctx: click.Context, file_id: uuid.UUID):
 
 
 @files.command(short_help="List the contents of a directory.")
-@click.argument("dir_id", type=click.UUID, required=False)
-@click.option("--search", "-s", type=click.STRING)
-@click.pass_context
-def ls(ctx: click.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
+@cloup.argument("dir_id", type=cloup.UUID, required=False)
+@cloup.option(
+    "--search",
+    "-s",
+    type=cloup.STRING,
+    help="Search for file/dir names containing this substring.",
+)
+@cloup.pass_context
+def ls(ctx: cloup.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
     """
     List the contents of the directory specified by DIR_ID. If DIR_ID
     is not provided, then all files will be listed.
@@ -38,10 +44,10 @@ def ls(ctx: click.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
 
 
 @files.command(short_help="Move a file to a directory.")
-@click.argument("src_id", type=click.UUID)
-@click.argument("dir_id", type=click.UUID, required=False)
-@click.pass_context
-def mv(ctx: click.Context, src_id: uuid.UUID, dir_id: uuid.UUID):
+@cloup.argument("src_id", type=cloup.UUID)
+@cloup.argument("dir_id", type=cloup.UUID, required=False)
+@cloup.pass_context
+def mv(ctx: cloup.Context, src_id: uuid.UUID, dir_id: uuid.UUID):
     """
     Move the file or directory specified by SRC_ID to the directory
     specified by DIR_ID. If DIR_ID is not provided, then the file will
@@ -52,10 +58,10 @@ def mv(ctx: click.Context, src_id: uuid.UUID, dir_id: uuid.UUID):
 
 
 @files.command(short_help="Create a new directory.")
-@click.argument("name", type=click.STRING)
-@click.argument("dir_id", type=click.UUID, required=False)
-@click.pass_context
-def mkdir(ctx: click.Context, name: str, dir_id: uuid.UUID):
+@cloup.argument("name", type=cloup.STRING)
+@cloup.argument("dir_id", type=cloup.UUID, required=False)
+@cloup.pass_context
+def mkdir(ctx: cloup.Context, name: str, dir_id: uuid.UUID):
     """
     Create a new directory with NAME and DIR_ID. If DIR_ID
     is not provided, then the new directory will be created in the
@@ -69,15 +75,15 @@ def mkdir(ctx: click.Context, name: str, dir_id: uuid.UUID):
     short_help="Remote copy files between Promethium and the local filesystem.",
     context_settings={"ignore_unknown_options": True},
 )
-@click.argument(
+@cloup.argument(
     "src",
 )
-@click.argument(
+@cloup.argument(
     "dest",
 )
-@click.pass_context
+@cloup.pass_context
 def rcp(
-    ctx: click.Context,
+    ctx: cloup.Context,
     src: str,
     dest: str,
 ):
@@ -101,12 +107,12 @@ def rcp(
 
 
 @files.command(short_help="Delete a file or directory.")
-@click.argument(
+@cloup.argument(
     "resource_id",
-    type=click.UUID,
+    type=cloup.UUID,
 )
-@click.pass_context
-def rm(ctx: click.Context, resource_id: uuid.UUID):
+@cloup.pass_context
+def rm(ctx: cloup.Context, resource_id: uuid.UUID):
     """
     Delete the file or directory specified by RESOURCE_ID.
     """

@@ -1,8 +1,20 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import UUID4, BaseModel, Field
 
-from promethium.models.models import Version, WorkflowKind, WorkflowStatus
+from promethium.models import (
+    Version,
+    WorkflowKind,
+    WorkflowStatus,
+    CreateTorsionScanWorkflowRequest,
+    CreateConformerSearchWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
+    CreateSinglePointCalculationWorkflowRequest,
+    CreateReactionPathOptimizationWorkflowRequest,
+    CreateTransitionStateOptimizationWorkflowRequest,
+    CreateInteractionEnergyCalculationWorkflowRequest,
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+)
 from promethium.utils import decode_artifact
 
 
@@ -31,3 +43,32 @@ class WorkflowResult(BaseModel):
             return decode_artifact(self.artifacts[name])
         except KeyError:
             raise ValueError(f"Artifact {name} not found")
+
+
+class ListWorkflowParams(BaseModel):
+    kind: WorkflowKind = Field(
+        ...,
+        description="The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']",
+    )
+    search: Optional[str] = Field(
+        None, description="Get workflows where `name` matches this substring."
+    )
+    status: Optional[List[WorkflowStatus]] = Field(
+        [],
+        description="The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']",
+    )
+    page: Optional[int] = Field(None, description="Page of results.")
+    size: Optional[int] = Field(10, description="Size of results page.")
+
+
+class CreateWorkflowParams(BaseModel):
+    workflow_definition: Union[
+        CreateTorsionScanWorkflowRequest,
+        CreateConformerSearchWorkflowRequest,
+        CreateGeometryOptimizationWorkflowRequest,
+        CreateSinglePointCalculationWorkflowRequest,
+        CreateReactionPathOptimizationWorkflowRequest,
+        CreateTransitionStateOptimizationWorkflowRequest,
+        CreateInteractionEnergyCalculationWorkflowRequest,
+        CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+    ]

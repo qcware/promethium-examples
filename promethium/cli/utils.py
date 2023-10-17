@@ -4,12 +4,23 @@ import typing
 import pathlib
 import configparser
 
+import cloup
 import click
 
+from promethium import models
 from promethium.cli.constants import BASE_URL, CONFIG_FILENAME
 from promethium.client import PromethiumClient
-
-# from promethium.filesys_utils import is_pathname_valid
+from promethium.models import (
+    WorkflowKind,
+    CreateTorsionScanWorkflowRequest,
+    CreateConformerSearchWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
+    CreateSinglePointCalculationWorkflowRequest,
+    CreateReactionPathOptimizationWorkflowRequest,
+    CreateTransitionStateOptimizationWorkflowRequest,
+    CreateInteractionEnergyCalculationWorkflowRequest,
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+)
 
 
 def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
@@ -53,7 +64,7 @@ def _get_base_url_from_config(config: dict) -> typing.Optional[str]:
     return None
 
 
-def get_api_key(ctx: click.Context, value: typing.Any) -> str:
+def get_api_key(ctx: cloup.Context, value: typing.Any) -> str:
     api_key = (
         value or os.environ.get("PM_API_KEY") or _get_api_key_from_config(read_config())
     )
@@ -69,7 +80,7 @@ Promethium API key not found. API keys are set in the following order of precede
     return api_key
 
 
-def get_base_url(ctx: click.Context, value: typing.Any) -> str:
+def get_base_url(ctx: cloup.Context, value: typing.Any) -> str:
     base_url = (
         value
         or os.environ.get("PM_BASE_URL")
@@ -87,7 +98,7 @@ Promethium Base URL not found. The Base URL is set in the following order of pre
     return base_url
 
 
-def get_client_from_context(ctx: click.Context) -> PromethiumClient:
+def get_client_from_context(ctx: cloup.Context) -> PromethiumClient:
     return ctx.obj["client"]
 
 
@@ -97,3 +108,18 @@ def validate_uuid_or_path(value: str) -> typing.Union[uuid.UUID, pathlib.Path]:
     except ValueError:
         pass
     return pathlib.Path(value)
+
+
+def get_create_workflow_request_class(
+    workflow_type: WorkflowKind,
+) -> typing.Union[
+    CreateTorsionScanWorkflowRequest,
+    CreateConformerSearchWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
+    CreateSinglePointCalculationWorkflowRequest,
+    CreateReactionPathOptimizationWorkflowRequest,
+    CreateTransitionStateOptimizationWorkflowRequest,
+    CreateInteractionEnergyCalculationWorkflowRequest,
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+]:
+    return getattr(models, f"Create{workflow_type}Request")
