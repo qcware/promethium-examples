@@ -85,7 +85,7 @@ class Files(BaseResource):
     def list(
         self,
         params: ListFileMetadataParams,
-    ) -> Union[Iterator[List[FileMetadata]], List[FileMetadata]]:
+    ) -> PageFileMetadata:
         resp = self._client.get(
             "/v0/files",
             params=params.model_dump(
@@ -135,16 +135,8 @@ class Files(BaseResource):
     def file(self, id: UUID4) -> FileMetadata:
         return self.metadata(id)
 
-    def ls(
-        self,
-        parent_id: Optional[UUID4] = None,
-        search: Optional[str] = None,
-    ) -> Union[Iterator, List[FileMetadata]]:
-        page_gen = self.list(parent_id=parent_id, search=search)
-        contents = []
-        for page in page_gen:
-            contents.extend(page)
-        return contents
+    def ls(self, params: ListFileMetadataParams) -> PageFileMetadata:
+        return self.list(params)
 
     def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
         return self.create(

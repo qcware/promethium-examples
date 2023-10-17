@@ -1,8 +1,11 @@
+from typing import Generator
+
 from httpx import Response
 import pytest
 import respx
 
 from promethium.client import PromethiumClient
+from promethium.models import ListFileMetadataParams, PageFileMetadata
 
 FILES_MOCK = {
     "items": [
@@ -42,17 +45,16 @@ def fake_api_key():
 
 
 @pytest.fixture
-def client(base_url, fake_api_key):
+def client(base_url, fake_api_key) -> Generator[None, None, PromethiumClient]:
     pc = PromethiumClient(base_url=base_url, api_key=fake_api_key)
     yield pc
 
 
 @respx.mock(assert_all_mocked=False)
-def test_file_list(client, base_url, respx_mock):
+def test_file_list(client: PromethiumClient, base_url, respx_mock):
     respx_mock.get(f"{base_url}/v0/files").mock(
         return_value=Response(status_code=200, json=FILES_MOCK)
     )
     # List files:
-    file_list = []
-    for page in client.files.list(size=50):
-        file_list.extend(page)
+    page = client.files.list(params=ListFileMetadataParams(size=50))
+    assert page == PageFileMetadata(**FILES_MOCK)

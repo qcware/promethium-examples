@@ -5,7 +5,12 @@ import typing
 import cloup
 import click
 
-from promethium.cli.utils import get_client_from_context, validate_uuid_or_path
+from promethium.cli.utils import (
+    get_client_from_context,
+    validate_uuid_or_path,
+    page_options,
+)
+from promethium.models import ListFileMetadataParams
 
 
 @cloup.group(help="Manage your files.", show_subcommand_aliases=True, aliases=["fs"])
@@ -27,20 +32,35 @@ def read(ctx: cloup.Context, file_id: uuid.UUID):
 
 @files.command(short_help="List the contents of a directory.")
 @cloup.argument("dir_id", type=cloup.UUID, required=False)
-@cloup.option(
-    "--search",
-    "-s",
-    type=cloup.STRING,
-    help="Search for file/dir names containing this substring.",
+@cloup.option_group(
+    "Filter results",
+    "",
+    cloup.option(
+        "--search",
+        "-s",
+        type=cloup.STRING,
+        help="Search for file/dir names containing this substring.",
+    ),
 )
+@page_options
 @cloup.pass_context
-def ls(ctx: cloup.Context, dir_id: uuid.UUID, search: typing.Optional[str]):
+def ls(
+    ctx: cloup.Context,
+    dir_id: uuid.UUID,
+    search: typing.Optional[str],
+    page: int,
+    size: int,
+):
     """
     List the contents of the directory specified by DIR_ID. If DIR_ID
     is not provided, then all files will be listed.
     """
-    res = get_client_from_context(ctx).files.ls(parent_id=dir_id, search=search)
-    click.echo(json.dumps([item.model_dump(mode="json") for item in res], indent=2))
+    page = get_client_from_context(ctx).files.ls(
+        params=ListFileMetadataParams(
+            parent_id=dir_id, search=search, page=page, size=size
+        )
+    )
+    click.echo(page.model_dump_json(indent=2))
 
 
 @files.command(short_help="Move a file to a directory.")

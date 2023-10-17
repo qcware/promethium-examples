@@ -8,7 +8,7 @@ from cloup.constraints import If, require_all
 import click
 import pytimeparse
 
-from promethium.cli.utils import get_client_from_context
+from promethium.cli.utils import get_client_from_context, page_options
 from promethium.models import (
     WorkflowKind,
     WorkflowStatus,
@@ -89,26 +89,31 @@ def status(ctx: cloup.Context, workflow_id: uuid.UUID):
 
 
 @workflows.command(short_help="List Workflows.", aliases=["ls"])
-@cloup.option(
-    "--kind",
-    "-k",
-    required=True,
-    type=cloup.Choice([k.value for k in WorkflowKind], case_sensitive=False),
-    help="Workflow kind (not case sensitive).",
+@cloup.option_group(
+    "Filter results",
+    "",
+    cloup.option(
+        "--kind",
+        "-k",
+        required=True,
+        type=cloup.Choice([k.value for k in WorkflowKind], case_sensitive=False),
+        help="Workflow kind (not case sensitive).",
+    ),
+    cloup.option(
+        "--search",
+        "-s",
+        type=cloup.STRING,
+        help="Search for workflow names containing this substring.",
+    ),
+    cloup.option(
+        "--status",
+        "-t",
+        multiple=True,
+        type=cloup.Choice([k.value for k in WorkflowStatus], case_sensitive=False),
+        help="List of Workflow Statuses (not case sensitive).",
+    ),
 )
-@cloup.option(
-    "--search",
-    "-s",
-    type=cloup.STRING,
-    help="Search for workflow names containing this substring.",
-)
-@cloup.option(
-    "--status",
-    "-t",
-    multiple=True,
-    type=cloup.Choice([k.value for k in WorkflowStatus], case_sensitive=False),
-    help="List of Workflow Statuses (not case sensitive).",
-)
+
 # @cloup.option(
 #     "--started-before",
 #     "-b",
@@ -129,24 +134,7 @@ def status(ctx: cloup.Context, workflow_id: uuid.UUID):
 # @cloup.option(
 #     "--stopped-after", type=cloup.DateTime(), help="Workflows started after <datetime>."
 # )
-@cloup.option(
-    "--page",
-    "-p",
-    default=1,
-    show_default=True,
-    required=True,
-    type=cloup.INT,
-    help="Get page of results.",
-)
-@cloup.option(
-    "--size",
-    "-z",
-    default=10,
-    show_default=True,
-    required=True,
-    type=cloup.INT,
-    help="Page size.",
-)
+@page_options
 @cloup.pass_context
 def list(
     ctx: cloup.Context,

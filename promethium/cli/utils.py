@@ -7,20 +7,21 @@ import configparser
 import cloup
 import click
 
-from promethium import models
+# from promethium import models
 from promethium.cli.constants import BASE_URL, CONFIG_FILENAME
 from promethium.client import PromethiumClient
-from promethium.models import (
-    WorkflowKind,
-    CreateTorsionScanWorkflowRequest,
-    CreateConformerSearchWorkflowRequest,
-    CreateGeometryOptimizationWorkflowRequest,
-    CreateSinglePointCalculationWorkflowRequest,
-    CreateReactionPathOptimizationWorkflowRequest,
-    CreateTransitionStateOptimizationWorkflowRequest,
-    CreateInteractionEnergyCalculationWorkflowRequest,
-    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
-)
+
+# from promethium.models import (
+#     WorkflowKind,
+#     CreateTorsionScanWorkflowRequest,
+#     CreateConformerSearchWorkflowRequest,
+#     CreateGeometryOptimizationWorkflowRequest,
+#     CreateSinglePointCalculationWorkflowRequest,
+#     CreateReactionPathOptimizationWorkflowRequest,
+#     CreateTransitionStateOptimizationWorkflowRequest,
+#     CreateInteractionEnergyCalculationWorkflowRequest,
+#     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+# )
 
 
 def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
@@ -110,16 +111,40 @@ def validate_uuid_or_path(value: str) -> typing.Union[uuid.UUID, pathlib.Path]:
     return pathlib.Path(value)
 
 
-def get_create_workflow_request_class(
-    workflow_type: WorkflowKind,
-) -> typing.Union[
-    CreateTorsionScanWorkflowRequest,
-    CreateConformerSearchWorkflowRequest,
-    CreateGeometryOptimizationWorkflowRequest,
-    CreateSinglePointCalculationWorkflowRequest,
-    CreateReactionPathOptimizationWorkflowRequest,
-    CreateTransitionStateOptimizationWorkflowRequest,
-    CreateInteractionEnergyCalculationWorkflowRequest,
-    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
-]:
-    return getattr(models, f"Create{workflow_type}Request")
+page_options = cloup.option_group(
+    "Paging options",
+    "",
+    cloup.option(
+        "--page",
+        "-p",
+        default=1,
+        show_default=True,
+        required=True,
+        type=cloup.INT,
+        help="Get page of results.",
+    ),
+    cloup.option(
+        "--size",
+        "-z",
+        default=10,
+        show_default=True,
+        required=True,
+        type=cloup.INT,
+        help="Page size.",
+    ),
+)
+
+
+# def get_create_workflow_request_class(
+#     workflow_type: WorkflowKind,
+# ) -> typing.Union[
+#     CreateTorsionScanWorkflowRequest,
+#     CreateConformerSearchWorkflowRequest,
+#     CreateGeometryOptimizationWorkflowRequest,
+#     CreateSinglePointCalculationWorkflowRequest,
+#     CreateReactionPathOptimizationWorkflowRequest,
+#     CreateTransitionStateOptimizationWorkflowRequest,
+#     CreateInteractionEnergyCalculationWorkflowRequest,
+#     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+# ]:
+#     return getattr(models, f"Create{workflow_type}Request")
