@@ -45,20 +45,33 @@ class WorkflowResult(BaseModel):
             raise ValueError(f"Artifact {name} not found")
 
 
-class ListWorkflowParams(BaseModel):
+class _PageBase(BaseModel):
+    page: Optional[int] = Field(1, description="Page of results.")
+    size: Optional[int] = Field(10, description="Size of results page.")
+
+
+class ListFileMetadataParams(_PageBase):
+    parent_id: Optional[UUID4] = Field(
+        None, description="List files and directories in this directory."
+    )
+    search: Optional[str] = Field(
+        None,
+        description="Get files and directories where `name` matches this substring.",
+    )
+
+
+class ListWorkflowParams(_PageBase):
     kind: WorkflowKind = Field(
         ...,
-        description="The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']",
+        description="The kind of the workflow.",
     )
     search: Optional[str] = Field(
         None, description="Get workflows where `name` matches this substring."
     )
     status: Optional[List[WorkflowStatus]] = Field(
         [],
-        description="The status of the workflow; can be one of ['CANCELED', 'COMPLETED', 'FAILED', 'RUNNING', 'TERMINATED', 'TIMED_OUT']",
+        description="The status of the workflow.",
     )
-    page: Optional[int] = Field(None, description="Page of results.")
-    size: Optional[int] = Field(10, description="Size of results page.")
 
 
 class CreateWorkflowParams(BaseModel):

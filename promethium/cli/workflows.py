@@ -71,7 +71,7 @@ def read(ctx: cloup.Context, workflow_id: uuid.UUID):
     )
 
 
-@workflows.command(short_help="Get the current status of a Workflow.", aliases=["st"])
+@workflows.command(short_help="Get the current status of a Workflow.", aliases=["s"])
 @cloup.argument("workflow_id", type=cloup.UUID)
 @cloup.pass_context
 def status(ctx: cloup.Context, workflow_id: uuid.UUID):
@@ -170,7 +170,9 @@ def list(
     click.echo(workflows.model_dump_json(indent=2))
 
 
-@workflows.command(short_help="Submit a new Workflow.", show_constraints=True)
+@workflows.command(
+    short_help="Submit a new Workflow.", aliases=["n"], show_constraints=True
+)
 @cloup.argument("input_file_path", type=cloup.file_path(allow_dash=True))
 @wait_opts
 @cloup.constraint(If("output_dir", then=require_all), ["wait"])
@@ -277,7 +279,7 @@ def results(
         click.echo(output)
 
 
-@workflows.command(short_help="Stop an in-progress Workflow.")
+@workflows.command(short_help="Stop an in-progress Workflow.", aliases=["st"])
 @cloup.argument("workflow_id", type=cloup.UUID)
 @cloup.pass_context
 def stop(ctx: cloup.Context, workflow_id: uuid.UUID):

@@ -12,11 +12,12 @@ from promethium.models import (
     Workflow,
     FileMetadata,
     PageWorkflow,
-    WorkflowKind,
     WorkflowResult,
     WorkflowStatus,
+    PageFileMetadata,
     UpdateFileRequest,
     ListWorkflowParams,
+    ListFileMetadataParams,
     CreateDirectoryRequest,
     CreateSimpleFileRequest,
     CreateTorsionScanWorkflowRequest,
@@ -83,28 +84,16 @@ class Files(BaseResource):
 
     def list(
         self,
-        page: Optional[int] = None,
-        size: int = 10,
-        parent_id: Optional[UUID4] = None,
-        search: Optional[str] = None,
+        params: ListFileMetadataParams,
     ) -> Union[Iterator[List[FileMetadata]], List[FileMetadata]]:
-        iterate = page is None
-        page = 1 if page is None else page
-        total = page * size + 1
-        while (page - 1) * size < total:
-            params = dict(page=page, size=size)
-            if parent_id:
-                params.update(parent_id=str(parent_id))
-            if search:
-                params.update(search=search)
-            response = self._client.get("/v0/files", params=params)
-            self._handle_response(response)
-            page_json = response.json()
-            if not iterate:
-                return self.metadata_from_items(page_json["items"])
-            yield self.metadata_from_items(page_json["items"])
-            page += 1
-            total = page_json["total"]
+        resp = self._client.get(
+            "/v0/files",
+            params=params.model_dump(
+                mode="json", exclude_none=True, exclude_unset=True
+            ),
+        )
+        self._handle_response(resp)
+        return PageFileMetadata(**resp.json())
 
     def update(self, id: UUID4, update: UpdateFileRequest) -> FileMetadata:
         response = self._client.patch(
