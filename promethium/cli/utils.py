@@ -7,21 +7,8 @@ import configparser
 import cloup
 import click
 
-# from promethium import models
 from promethium.cli.constants import BASE_URL, CONFIG_FILENAME
 from promethium.client import PromethiumClient
-
-# from promethium.models import (
-#     WorkflowKind,
-#     CreateTorsionScanWorkflowRequest,
-#     CreateConformerSearchWorkflowRequest,
-#     CreateGeometryOptimizationWorkflowRequest,
-#     CreateSinglePointCalculationWorkflowRequest,
-#     CreateReactionPathOptimizationWorkflowRequest,
-#     CreateTransitionStateOptimizationWorkflowRequest,
-#     CreateInteractionEnergyCalculationWorkflowRequest,
-#     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
-# )
 
 
 def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
@@ -133,18 +120,3 @@ page_options = cloup.option_group(
         help="Page size.",
     ),
 )
-
-
-# def get_create_workflow_request_class(
-#     workflow_type: WorkflowKind,
-# ) -> typing.Union[
-#     CreateTorsionScanWorkflowRequest,
-#     CreateConformerSearchWorkflowRequest,
-#     CreateGeometryOptimizationWorkflowRequest,
-#     CreateSinglePointCalculationWorkflowRequest,
-#     CreateReactionPathOptimizationWorkflowRequest,
-#     CreateTransitionStateOptimizationWorkflowRequest,
-#     CreateInteractionEnergyCalculationWorkflowRequest,
-#     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
-# ]:
-#     return getattr(models, f"Create{workflow_type}Request")
