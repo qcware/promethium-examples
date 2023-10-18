@@ -7,8 +7,9 @@ import click
 from promethium.cli.config import config
 from promethium.cli.files import files
 from promethium.cli.workflows import workflows
-from promethium.cli.utils import get_api_key, get_base_url, ensure_config
+from promethium.cli.utils import ensure_config
 from promethium.client import PromethiumClient
+from promethium.exceptions import NoAPIKeyError, NoBaseURLError
 
 VERSION = pkg_resources.get_distribution("promethium").version
 
@@ -33,8 +34,10 @@ def _print_version(ctx, _, value):
     expose_value=False,
     is_eager=True,
 )
-@cloup.option("--api-key", "-k", help="Set Promethium API Key.")
-@cloup.option("--base-url", "-b", help="Set Promethium Base URL.", hidden=True)
+@cloup.option("--api-key", "-k", help="Set Promethium API Key.", default=None)
+@cloup.option(
+    "--base-url", "-b", help="Set Promethium Base URL.", default=None, hidden=True
+)
 @cloup.option(
     "--show-tracebacks",
     "-t",
@@ -51,9 +54,26 @@ def run(ctx: cloup.Context, api_key: str, base_url: str, show_tracebacks: bool):
     ctx.ensure_object(dict)
     cmd = ctx.invoked_subcommand
     if cmd in ["workflows", "files"]:
-        api_key = get_api_key(ctx, api_key)
-        base_url = get_base_url(ctx, base_url)
-        ctx.obj["client"] = PromethiumClient(base_url=base_url, api_key=api_key)
+        try:
+            ctx.obj["client"] = PromethiumClient(base_url=base_url, api_key=api_key)
+        except NoAPIKeyError:
+            click.echo(
+                """
+Promethium API key not found. API keys are set in the following order of precedence:
+    1. Run this script with the `--api-key` or `-k` option.
+    2. Set the `PM_API_KEY` environment variable.
+    3. Run `promethium config credentials` and follow the prompt."""
+            )
+            ctx.exit(1)
+        except NoBaseURLError:
+            click.echo(
+                """
+Promethium Base URL not found. The Base URL is set in the following order of precedence:
+    1. Run this script with the `--base-url` or `-b` option.
+    2. Set the `PM_BASE_URL` environment variable.
+    3. Run `promethium config base-url` and follow the prompt."""
+            )
+            ctx.exit(1)
 
 
 for group in [config, workflows, files]:

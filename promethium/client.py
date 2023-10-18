@@ -1,5 +1,6 @@
 import os
 import pathlib
+import warnings
 from uuid import UUID
 from functools import partial
 from typing import Optional, Type, Union, List
@@ -7,7 +8,12 @@ from typing import Optional, Type, Union, List
 from httpx import Client, HTTPStatusError
 from pydantic import UUID4
 
-from promethium.exceptions import FileNotFound, WorkflowNotFound
+from promethium.exceptions import (
+    FileNotFound,
+    WorkflowNotFound,
+    NoAPIKeyError,
+    NoBaseURLError,
+)
 from promethium.models import (
     Workflow,
     FileMetadata,
@@ -17,6 +23,7 @@ from promethium.models import (
     PageFileMetadata,
     UpdateFileRequest,
     ListWorkflowParams,
+    ValidFileExtensions,
     ListFileMetadataParams,
     CreateDirectoryRequest,
     CreateSimpleFileRequest,
@@ -30,13 +37,15 @@ from promethium.models import (
     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
 )
 from promethium.utils import (
+    get_api_key,
+    get_base_url,
     wait_for_workflows_to_complete,
-    filter_unsupported_extensions,
     base64encode,
     TERMINAL_STATUSES,
     NON_TERMINAL_STATUSES,
 )
 from promethium.filesys_utils import is_path_exists_or_creatable_portable
+from promethium.constants import BASE_URL
 
 
 def handle_response(response, not_found_exception: Type):
@@ -48,6 +57,23 @@ def handle_response(response, not_found_exception: Type):
         else:
             raise e
     return response
+
+
+def has_valid_file_extension(filename: str) -> bool:
+    extension = filename.split(".")[-1]
+    return extension in [ext.value for ext in ValidFileExtensions]
+
+
+def filter_unsupported_extensions(
+    files: list[CreateSimpleFileRequest],
+) -> list[CreateSimpleFileRequest]:
+    filtered_list = []
+    for file in files:
+        if has_valid_file_extension(file.name):
+            filtered_list.append(file)
+        else:
+            warnings.warn(f"Unsupported file type: {file.name}", stacklevel=0)
+    return filtered_list
 
 
 class BaseResource:
@@ -282,18 +308,17 @@ class Workflows(BaseResource):
 
 class PromethiumClient:
     def __init__(
-        self, base_url: Optional[str] = None, api_key: Optional[str] = None
+        self, base_url: Optional[str] = BASE_URL, api_key: Optional[str] = None
     ) -> None:
-        self.base_url = (
-            os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
-            if base_url is None
-            else base_url
-        )
+        self.base_url = get_base_url(base_url)
+        if not self.base_url:
+            raise NoBaseURLError("No Base URL found for Promethium Client")
+        self._api_key = get_api_key(api_key)
+        if not self._api_key:
+            raise NoAPIKeyError("No API key found for Promethium Client")
         self._client = Client(
             base_url=self.base_url,
-            headers={
-                "X-API-KEY": os.environ["PM_API_KEY"] if api_key is None else api_key
-            },
+            headers={"X-API-KEY": self._api_key},
         )
         self._workflows = Workflows(client=self.client)
         self._files = Files(client=self.client)

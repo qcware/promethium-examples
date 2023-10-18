@@ -1,7 +1,10 @@
+import os
 import time
 import base64
+import pathlib
 import binascii
 import warnings
+import configparser
 from enum import Enum
 from datetime import datetime
 from typing import Optional, Union
@@ -10,7 +13,7 @@ from httpx import Client
 from pydantic import UUID4
 
 from promethium.exceptions import ClientError
-from promethium.models import ValidFileExtensions, CreateSimpleFileRequest
+from promethium.constants import BASE_URL, CONFIG_FILENAME
 
 
 def _custom_formatwarning(msg, *args, **kwargs):
@@ -95,18 +98,56 @@ def wait_for_workflows_to_complete(
     raise ClientError("Error waiting for workflows to complete")
 
 
-def has_valid_file_extension(filename: str) -> bool:
-    extension = filename.split(".")[-1]
-    return extension in [ext.value for ext in ValidFileExtensions]
+def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
+    config = configparser.ConfigParser()
+    if not config.read(config_dir.joinpath(CONFIG_FILENAME)):
+        write_config_value("Connection", "base_url", BASE_URL)
 
 
-def filter_unsupported_extensions(
-    files: list[CreateSimpleFileRequest],
-) -> list[CreateSimpleFileRequest]:
-    filtered_list = []
-    for file in files:
-        if has_valid_file_extension(file.name):
-            filtered_list.append(file)
-        else:
-            warnings.warn(f"Unsupported file type: {file.name}", stacklevel=0)
-    return filtered_list
+def read_config(config_dir: pathlib.Path = pathlib.Path.home()) -> dict:
+    config = configparser.ConfigParser()
+    config.read(config_dir.joinpath(CONFIG_FILENAME))
+    return config._sections
+
+
+def write_config_value(
+    section: str,
+    key: str,
+    value: str,
+    config_dir: pathlib.Path = pathlib.Path.home(),
+) -> None:
+    config = configparser.ConfigParser()
+    configpath = config_dir.joinpath(CONFIG_FILENAME)
+    config.read(configpath)
+    config[section] = {}
+    config[section][key] = value
+    with open(config_dir.joinpath(CONFIG_FILENAME), "w") as configfile:
+        config.write(configfile)
+
+
+def _get_api_key_from_config(config: dict) -> Optional[str]:
+    if config:
+        if creds := config.get("Credentials"):
+            return creds.get("api_key")
+    return None
+
+
+def _get_base_url_from_config(config: dict) -> Optional[str]:
+    if config:
+        if creds := config.get("Connection"):
+            return creds.get("base_url")
+    return None
+
+
+def get_api_key(value: Optional[str] = None) -> Optional[str]:
+    return (
+        value or os.environ.get("PM_API_KEY") or _get_api_key_from_config(read_config())
+    )
+
+
+def get_base_url(value: Optional[str] = None) -> Optional[str]:
+    return (
+        value
+        or os.environ.get("PM_BASE_URL")
+        or _get_base_url_from_config(read_config())
+    )

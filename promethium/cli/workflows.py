@@ -112,28 +112,29 @@ def status(ctx: cloup.Context, workflow_id: uuid.UUID):
         type=cloup.Choice([k.value for k in WorkflowStatus], case_sensitive=False),
         help="List of Workflow Statuses (not case sensitive).",
     ),
+    cloup.option(
+        "--started-before",
+        "-b",
+        type=cloup.DateTime(),
+        help="Get Workflows started before <datetime>.",
+    ),
+    cloup.option(
+        "--started-after",
+        "-a",
+        type=cloup.DateTime(),
+        help="Get Workflows started after <datetime>.",
+    ),
+    cloup.option(
+        "--stopped-before",
+        type=cloup.DateTime(),
+        help="Get Workflows started before <datetime>.",
+    ),
+    cloup.option(
+        "--stopped-after",
+        type=cloup.DateTime(),
+        help="Get Workflows started after <datetime>.",
+    ),
 )
-
-# @cloup.option(
-#     "--started-before",
-#     "-b",
-#     type=cloup.DateTime(),
-#     help="Workflows started before <datetime>.",
-# )
-# @cloup.option(
-#     "--started-after",
-#     "-a",
-#     type=cloup.DateTime(),
-#     help="Workflows started after <datetime>.",
-# )
-# @cloup.option(
-#     "--stopped-before",
-#     type=cloup.DateTime(),
-#     help="Workflows started before <datetime>.",
-# )
-# @cloup.option(
-#     "--stopped-after", type=cloup.DateTime(), help="Workflows started after <datetime>."
-# )
 @page_options
 @cloup.pass_context
 def list(
@@ -141,10 +142,10 @@ def list(
     kind: str,
     search: str,
     status: str,
-    # started_before: datetime,
-    # started_after: datetime,
-    # stopped_before: datetime,
-    # stopped_after: datetime,
+    started_before: datetime,
+    started_after: datetime,
+    stopped_before: datetime,
+    stopped_after: datetime,
     page: int,
     size: int,
 ):
