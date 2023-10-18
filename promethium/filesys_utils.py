@@ -1,3 +1,5 @@
+# See https://stackoverflow.com/a/34102855
+
 import errno, os, sys, tempfile
 
 # Sadly, Python fails to provide the following magic number for us.
