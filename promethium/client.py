@@ -135,7 +135,7 @@ class Files(BaseResource):
     def file(self, id: UUID4) -> FileMetadata:
         return self.metadata(id)
 
-    def ls(self, params: ListFileMetadataParams) -> PageFileMetadatapyt:
+    def ls(self, params: ListFileMetadataParams) -> PageFileMetadata:
         return self.list(params)
 
     def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
