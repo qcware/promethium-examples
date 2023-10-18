@@ -2,7 +2,7 @@ import os
 import pathlib
 from uuid import UUID
 from functools import partial
-from typing import Iterator, Optional, Type, Union, List
+from typing import Optional, Type, Union, List
 
 from httpx import Client, HTTPStatusError
 from pydantic import UUID4
@@ -135,7 +135,7 @@ class Files(BaseResource):
     def file(self, id: UUID4) -> FileMetadata:
         return self.metadata(id)
 
-    def ls(self, params: ListFileMetadataParams) -> PageFileMetadata:
+    def ls(self, params: ListFileMetadataParams) -> PageFileMetadatapyt:
         return self.list(params)
 
     def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
