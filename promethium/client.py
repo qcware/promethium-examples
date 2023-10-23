@@ -1,24 +1,51 @@
-from functools import partial
 import os
-from typing import Generator, Optional, Type, Union
+import pathlib
+import warnings
 from uuid import UUID
+from functools import partial
+from typing import Optional, Type, Union, List
 
 from httpx import Client, HTTPStatusError
 from pydantic import UUID4
 
-from promethium.exceptions import FileNotFound, WorkflowNotFound
+from promethium.exceptions import (
+    FileNotFound,
+    WorkflowNotFound,
+    NoAPIKeyError,
+    NoBaseURLError,
+)
 from promethium.models import (
-    FileMetadata,
     Workflow,
-    WorkflowKind,
+    FileMetadata,
+    PageWorkflow,
     WorkflowResult,
     WorkflowStatus,
+    PageFileMetadata,
+    UpdateFileRequest,
+    ListWorkflowParams,
+    ValidFileExtensions,
+    ListFileMetadataParams,
+    CreateDirectoryRequest,
+    CreateSimpleFileRequest,
+    CreateTorsionScanWorkflowRequest,
+    CreateConformerSearchWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
+    CreateSinglePointCalculationWorkflowRequest,
+    CreateReactionPathOptimizationWorkflowRequest,
+    CreateTransitionStateOptimizationWorkflowRequest,
+    CreateInteractionEnergyCalculationWorkflowRequest,
+    CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
 )
 from promethium.utils import (
+    get_api_key,
+    get_base_url,
     wait_for_workflows_to_complete,
+    base64encode,
     TERMINAL_STATUSES,
     NON_TERMINAL_STATUSES,
 )
+from promethium.filesys_utils import is_path_exists_or_creatable_portable
+from promethium.constants import BASE_URL
 
 
 def handle_response(response, not_found_exception: Type):
@@ -30,6 +57,23 @@ def handle_response(response, not_found_exception: Type):
         else:
             raise e
     return response
+
+
+def has_valid_file_extension(filename: str) -> bool:
+    extension = filename.split(".")[-1]
+    return extension in [ext.value for ext in ValidFileExtensions]
+
+
+def filter_unsupported_extensions(
+    files: list[CreateSimpleFileRequest],
+) -> list[CreateSimpleFileRequest]:
+    filtered_list = []
+    for file in files:
+        if has_valid_file_extension(file.name):
+            filtered_list.append(file)
+        else:
+            warnings.warn(f"Unsupported file type: {file.name}", stacklevel=0)
+    return filtered_list
 
 
 class BaseResource:
@@ -52,10 +96,12 @@ class Files(BaseResource):
     def metadata_from_items(cls, items: list[dict]) -> list[FileMetadata]:
         return [FileMetadata(**file) for file in items]
 
-    def metadata(self, id: UUID4) -> Union[str, bytes]:
+    # API
+
+    def metadata(self, id: UUID4) -> FileMetadata:
         response = self._client.get(f"/v0/files/{id}")
         self._handle_response(response)
-        return response.json()
+        return FileMetadata(**response.json())
 
     def download(self, id: UUID4) -> Union[str, bytes]:
         response = self._client.get(f"/v0/files/{id}/download", follow_redirects=True)
@@ -63,20 +109,119 @@ class Files(BaseResource):
         return response.content
 
     def list(
-        self, page: Optional[int] = None, size: int = 10
-    ) -> Union[Generator, list[FileMetadata]]:
-        iterate = page is None
-        page = 1 if page is None else page
-        total = page * size + 1
-        while (page - 1) * size < total:
-            response = self._client.get("/v0/files", params={"page": page})
-            self._handle_response(response)
-            page_json = response.json()
-            if not iterate:
-                return self.metadata_from_items(page_json["items"])
-            yield self.metadata_from_items(page_json["items"])
-            page += 1
-            total = page_json["total"]
+        self,
+        params: ListFileMetadataParams,
+    ) -> PageFileMetadata:
+        resp = self._client.get(
+            "/v0/files",
+            params=params.model_dump(
+                mode="json", exclude_none=True, exclude_unset=True
+            ),
+        )
+        self._handle_response(resp)
+        return PageFileMetadata(**resp.json())
+
+    def update(self, id: UUID4, update: UpdateFileRequest) -> FileMetadata:
+        response = self._client.patch(
+            f"/v0/files/{id}",
+            data=update.model_dump_json(exclude_none=True, exclude_unset=True),
+        )
+        self._handle_response(response)
+        return FileMetadata(**response.json())
+
+    def create(
+        self, create: Union[CreateSimpleFileRequest, CreateDirectoryRequest]
+    ) -> FileMetadata:
+        response = self._client.post(
+            "/v0/files",
+            data=create.model_dump_json(exclude_none=True, exclude_unset=True),
+        )
+        self._handle_response(response)
+        return FileMetadata(**response.json())
+
+    def create_batch(
+        self, batch: List[Union[CreateSimpleFileRequest, CreateDirectoryRequest]]
+    ) -> List[FileMetadata]:
+        response = self._client.post(
+            "/v0/files/batch",
+            json=[
+                item.model_dump(mode="json", exclude_none=True, exclude_unset=True)
+                for item in batch
+            ],
+        )
+        self._handle_response(response)
+        return [FileMetadata(**item) for item in response.json()]
+
+    def delete(self, id: UUID4) -> None:
+        response = self._client.delete(f"/v0/files/{id}")
+        self._handle_response(response)
+
+    # FILESYSTEM OPS
+
+    def file(self, id: UUID4) -> FileMetadata:
+        return self.metadata(id)
+
+    def ls(self, params: ListFileMetadataParams) -> PageFileMetadata:
+        return self.list(params)
+
+    def mkdir(self, name, parent_id: Optional[UUID4] = None) -> FileMetadata:
+        return self.create(
+            CreateDirectoryRequest(name=name, parent_id=parent_id, is_directory=True)
+        )
+
+    def mv(self, id, new_parent_id: Optional[UUID4] = None) -> FileMetadata:
+        return self.update(id, UpdateFileRequest(parent_id=new_parent_id))
+
+    def rcp(  # NOSONAR
+        self, src: Union[UUID4, pathlib.Path], dest: Union[UUID4, pathlib.Path]
+    ) -> Optional[FileMetadata]:
+        if isinstance(src, UUID) and isinstance(dest, pathlib.Path):
+            if not dest.is_dir:
+                raise ValueError("Destination path is not a directory")
+            if not is_path_exists_or_creatable_portable(str(dest)):
+                raise ValueError("Destination path does not exist or is not creatable")
+            data = self.download(src)
+            src_metadata = self.metadata(src)
+            filename = src_metadata.name
+            if src_metadata.is_directory:
+                filename += ".zip"
+            with open(dest.joinpath(filename), "wb") as outfile:
+                outfile.write(data)
+        elif isinstance(src, pathlib.Path) and isinstance(dest, UUID):
+            dest_metadata = self.metadata(dest)
+            if not dest_metadata.is_directory:
+                raise ValueError("Destination is not a directory")
+            if not is_path_exists_or_creatable_portable(str(src)):
+                raise ValueError("Source path is not a file or directory")
+            to_upload = filter_unsupported_extensions(
+                [
+                    CreateSimpleFileRequest(
+                        name=file.name,
+                        parent_id=dest,
+                        is_directory=False,
+                        base64body=base64encode(file.read_bytes()),
+                    )
+                    for file in src.iterdir()
+                    if file.is_file()
+                ]
+                if src.is_dir()
+                else [
+                    CreateSimpleFileRequest(
+                        name=src.name,
+                        parent_id=dest,
+                        is_directory=False,
+                        base64body=base64encode(src.read_bytes()),
+                    )
+                ]
+            )
+            return self.create_batch(to_upload)
+        else:
+            raise ValueError(
+                "One of src and dest must be a UUID and the other must be a filesystem path"
+            )
+
+    def rm(self, id: UUID4) -> None:
+        return self.delete(id)
 
 
 class Workflows(BaseResource):
@@ -86,38 +231,46 @@ class Workflows(BaseResource):
             handle_response, not_found_exception=WorkflowNotFound
         )
 
+    @classmethod
+    def from_items(cls, items: list[dict]) -> list[Workflow]:
+        return [Workflow(**workflow) for workflow in items]
+
+    # API
+
     def get(self, id: UUID4) -> Workflow:
         workflow_response = self._client.get(f"/v0/workflows/{id}")
         self._handle_response(workflow_response)
         return Workflow(**workflow_response.json())
 
-    @classmethod
-    def from_items(cls, items: list[dict]) -> list[Workflow]:
-        return [Workflow(**workflow) for workflow in items]
-
     def status(self, id: UUID4) -> WorkflowStatus:
         return self.get(id).status
 
-    def list(
-        self, kind: WorkflowKind, page: Optional[int] = None, size: int = 10
-    ) -> Union[Generator, list[Workflow]]:
-        iterate = page is None
-        page = 1 if page is None else page
-        total = page * size + 1
-        while (page - 1) * size < total:
-            response = self._client.get(
-                "/v0/workflows", params={"kind": kind.value, "page": page}
-            )
-            self._handle_response(response)
-            page_json = response.json()
-            if not iterate:
-                return self.from_items(page_json["items"])
-            yield self.from_items(page_json["items"])
-            page += 1
-            total = page_json["total"]
+    def list(self, params: ListWorkflowParams) -> PageWorkflow:
+        resp = self._client.get(
+            "/v0/workflows",
+            params=params.model_dump(
+                mode="json", exclude_none=True, exclude_unset=True
+            ),
+        )
+        self._handle_response(resp)
+        return PageWorkflow(**resp.json())
 
-    def submit(self, workflow_request) -> Workflow:
-        payload = workflow_request.json(exclude_unset=True, exclude_none=True)
+    def submit(
+        self,
+        workflow_request: Union[
+            CreateTorsionScanWorkflowRequest,
+            CreateConformerSearchWorkflowRequest,
+            CreateGeometryOptimizationWorkflowRequest,
+            CreateSinglePointCalculationWorkflowRequest,
+            CreateReactionPathOptimizationWorkflowRequest,
+            CreateTransitionStateOptimizationWorkflowRequest,
+            CreateInteractionEnergyCalculationWorkflowRequest,
+            CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
+        ],
+    ) -> Workflow:
+        payload = workflow_request.model_dump_json(
+            exclude_unset=True, exclude_none=True
+        )
         response = self._client.post("/v0/workflows", data=payload)
         response.raise_for_status()
         return Workflow(**response.json())
@@ -136,12 +289,12 @@ class Workflows(BaseResource):
         response = self._client.post(f"/v0/workflows/{id}/stop")
         self._handle_response(response)
 
-    def download(self, id: UUID4, path: Optional[str] = None) -> None:
-        path = os.getcwd() if path is None else path
+    def download(self, id: UUID4) -> Union[str, bytes]:
         response = self._client.get(
             f"/v0/workflows/{id}/results/download", follow_redirects=True
         )
         self._handle_response(response)
+        return response.content
 
     def delete(self, id: UUID4) -> None:
         """Deletes a workflow, or raises if it doesn't exist,
@@ -155,18 +308,17 @@ class Workflows(BaseResource):
 
 class PromethiumClient:
     def __init__(
-        self, base_url: Optional[str] = None, api_key: Optional[str] = None
+        self, base_url: Optional[str] = BASE_URL, api_key: Optional[str] = None
     ) -> None:
-        self.base_url = (
-            os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
-            if base_url is None
-            else base_url
-        )
+        self.base_url = get_base_url(base_url)
+        if not self.base_url:
+            raise NoBaseURLError("No Base URL found for Promethium Client")
+        self._api_key = get_api_key(api_key)
+        if not self._api_key:
+            raise NoAPIKeyError("No API key found for Promethium Client")
         self._client = Client(
             base_url=self.base_url,
-            headers={
-                "X-API-KEY": os.environ["PM_API_KEY"] if api_key is None else api_key
-            },
+            headers={"X-API-KEY": self._api_key},
         )
         self._workflows = Workflows(client=self.client)
         self._files = Files(client=self.client)
