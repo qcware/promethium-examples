@@ -161,3 +161,9 @@ cython_debug/
 
 # VSCode
 .vscode
+
+# Mac:
+.DS_Store
+
+# Ignore the example results:
+output/
