@@ -22,7 +22,7 @@ if not os.path.exists(foldername):
 n = 4
 workflow_ids = []
 
-prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
+prom = PromethiumClient()
 
 for i in range(1, n + 1):
     with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:

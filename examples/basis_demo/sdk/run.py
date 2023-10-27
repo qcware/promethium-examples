@@ -122,7 +122,7 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
+prom = PromethiumClient()
 go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
 go_workflow = prom.workflows.submit(go_payload)
 
