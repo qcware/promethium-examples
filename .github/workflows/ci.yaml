@@ -42,7 +42,7 @@ jobs:
       # Upload testing artifacts:
       - uses: actions/upload-artifact@v3
         with:
-          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          name: pm-sdk-test-${{ github.run_id }}
           path: |
             /home/runner/work/promethium-examples/promethium-examples/coverage.xml
             /home/runner/work/promethium-examples/promethium-examples/test-report.xml
@@ -70,15 +70,36 @@ jobs:
       - name: Build package
         run: poetry build
 
-      # Upload testing artifacts:
       - uses: actions/upload-artifact@v3
         with:
-          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          name: pm-sdk-build-${{ github.run_id }}
           path: |
-            /home/runner/work/promethium-examples/promethium-examples/dist/promethium-*-py3-none-any.whl
-            /home/runner/work/promethium-examples/promethium-examples/dist/promethium-*-tar.gz
+            dist/
           if-no-files-found: "warn"
           retention-days: 21
+
+  install:
+    name: Install Promethium SDK
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: pm-sdk-build-${{ github.run_id }}
+          path: |
+            dist/
+
+      - name: Install package in clean environment
+        run: pip install dist/promethium-*-py3-none-any.whl
 
   sonar:
     name: Run sonarcloud scanning and test parsing
@@ -98,7 +119,7 @@ jobs:
       - name: Download testing artifacts
         uses: actions/download-artifact@v3
         with:
-          name: pm-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          name: pm-sdk-test-${{ github.run_id }}
           path: |
             /home/runner/work/promethium-examples/promethium-examples/coverage.xml
             /home/runner/work/promethium-examples/promethium-examples/test-report.xml

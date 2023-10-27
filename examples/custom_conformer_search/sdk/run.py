@@ -130,7 +130,7 @@ job_params = {
 }
 
 
-prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
+prom = PromethiumClient()
 
 SMILES = [
     "CCOCC",

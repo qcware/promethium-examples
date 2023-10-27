@@ -95,7 +95,7 @@ coarse_dft_filter = {
     "key": "DFT Stage 1 (Coarse Filtering)"
 }
 
-prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
+prom = PromethiumClient()
 
 SMILES = [
     "C1=CN=C(C=N1)C(=O)N",

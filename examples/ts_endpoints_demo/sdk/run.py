@@ -111,7 +111,7 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-prom = PromethiumClient(api_key=os.environ["PM_API_KEY"])
+prom = PromethiumClient()
 payload = CreateTransitionStateOptimizationFromEndpointsWorkflowRequest(**job_params)
 workflow = prom.workflows.submit(payload)
 

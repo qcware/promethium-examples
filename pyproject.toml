@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "promethium"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python client for interacting with the Promethium Quantum Chemistry platform"
 authors = ["QC Ware Corp"]
 license = "Proprietary"
@@ -12,7 +12,6 @@ httpx = "^0.25.0"
 pydantic = "2.3.0"
 PyYAML = "^6.0.1"
 pandas = "^2.1.1"
-jupyter = "^1.0.0"
 click = "^8.1.7"
 rich = "^13.6.0"
 cloup = "^3.0.2"
