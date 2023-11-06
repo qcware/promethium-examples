@@ -40,7 +40,7 @@ and begin using the SDK.
 
 This repository contains a variety of examples for interacting with Promethium programmatically.
 
-Each example has two versions:
+Each example has up to two different versions:
 
 1. Interacting with the Promethium API via the SDK (recommended), and,
 2. Directly querying the API.
