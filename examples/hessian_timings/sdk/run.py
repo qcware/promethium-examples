@@ -64,7 +64,6 @@ job_params = {
         "optimization": {
             "params": {
                 "maxiter": 200,
-                "convergence": "strict",
                 "g_convergence": 1.0e-3,
             },
             "outputs": {"gradient": True, "vibrational_frequencies": True},
