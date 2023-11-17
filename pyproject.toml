@@ -23,6 +23,8 @@ pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 black = "^23.9.1"
 datamodel-code-generator = "^0.22.1"
+sphinx = "^7.2.6"
+autodoc-pydantic = "^2.0.1"
 
 [tool.poetry.scripts]
 promethium = 'promethium.cli:run'
