@@ -12,12 +12,25 @@ from promethium.client import PromethiumClient
 
 
 def ensure_config(config_dir: pathlib.Path = pathlib.Path.home()) -> None:
+    """Ensure config file exists at specified location.
+
+    Args:
+        config_dir (pathlib.Path, optional): Directory where conifig is saved. Defaults to pathlib.Path.home().
+    """
     config = configparser.ConfigParser()
     if not config.read(config_dir.joinpath(CONFIG_FILENAME)):
         write_config_value("Connection", "base_url", BASE_URL)
 
 
 def read_config(config_dir: pathlib.Path = pathlib.Path.home()) -> dict:
+    """Read config .INI file and return config values as a dict.
+
+    Args:
+        config_dir (pathlib.Path, optional): Directory where conifig is saved. Defaults to pathlib.Path.home().
+
+    Returns:
+        dict: Config returned as key-value pairs, can contain nested dicts.
+    """
     config = configparser.ConfigParser()
     config.read(config_dir.joinpath(CONFIG_FILENAME))
     return config._sections
@@ -29,6 +42,14 @@ def write_config_value(
     value: str,
     config_dir: pathlib.Path = pathlib.Path.home(),
 ) -> None:
+    """Write config values to the file at the specified location.
+
+    Args:
+        section (str): _description_
+        key (str): _description_
+        value (str): _description_
+        config_dir (pathlib.Path, optional): _description_. Defaults to pathlib.Path.home().
+    """
     config = configparser.ConfigParser()
     configpath = config_dir.joinpath(CONFIG_FILENAME)
     config.read(configpath)
