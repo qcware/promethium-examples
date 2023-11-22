@@ -10,8 +10,14 @@ from promethium.utils import (
 )
 
 # Note:
-# Run times for some of these conformers searches is non-trivial ~1-1.5hrs wall time
-# with slightly more than that in total GPU time.
+# Est. Runtimes:
+# Wall-clock / Real-world time:
+# Diethyl Ether = <10 mins
+# Daridorexant = <15 mins
+#
+# Billable Compute time:
+# Diethyl Ether = <6 mins
+# Daridorexant = ~3.5-4.0 hours
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -28,7 +34,7 @@ job_params = {
     "parameters": {
         "molecule": {},
         "params": {
-            "confgen_max_n_conformers": 250,
+            "confgen_max_n_conformers": 30,
             "confgen_rmsd_threshold": 0.3,
             "charge": 0,
             "multiplicity": 1,
@@ -39,7 +45,7 @@ job_params = {
                 "params": {
                     "maxiter": 15,
                     "energy_threshold": 5,
-                    "do_geometry_optimization": False,
+                    "do_geometry_optimization": True,
                     "distance_threshold": 0.005,
                     "g_thresh": 1e-3
                 },
@@ -99,7 +105,7 @@ job_params = {
                 "params": {
                     "maxiter": 100,
                     "energy_threshold": 5,
-                    "do_geometry_optimization": True,
+                    "do_geometry_optimization": False,
                     "distance_threshold": 0.005,
                     "g_thresh": 1e-4
                 },
@@ -133,8 +139,8 @@ job_params = {
 prom = PromethiumClient()
 
 SMILES = [
-    "CCOCC",
-    "CC1=C(C=CC2=C1N=C(N2)C3(CCCN3C(=O)C4=C(C=CC(=C4)OC)N5N=CC=N5)C)Cl",
+    "CCOCC", #Diethyl Ether
+    "CC1=C(C=CC2=C1N=C(N2)C3(CCCN3C(=O)C4=C(C=CC(=C4)OC)N5N=CC=N5)C)Cl", #Daridorexant
 ]
 
 workflow_ids = []
