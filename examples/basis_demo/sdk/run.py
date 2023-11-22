@@ -1,6 +1,6 @@
-import base64
 import os
 
+from promethium.utils import base64encode
 from promethium.client import PromethiumClient
 from promethium.models import (
     CreateGeometryOptimizationWorkflowRequest,
@@ -14,8 +14,7 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(
-    b"""
+mol = base64encode("""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -85,8 +84,6 @@ mol = base64.b64encode(
     O         3.42325       -5.20351       -2.69779"""
 )
 
-mol = mol.decode("utf-8")
-
 go_name = "paxlovid_api_geomopt"
 job_params = {
     "name": go_name,
@@ -145,6 +142,9 @@ print(molecule_str)
 # Download:
 prom.workflows.download(go_workflow.id)
 
+# Re-encode the molecule:
+opt_mol = base64encode(molecule_str)
+
 # SPC: SinglePointCalculation
 spc_name = "paxlovid_api_spe"
 job_params = {
@@ -152,7 +152,7 @@ job_params = {
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {"base64data": mol, "filetype": "xyz"},
+        "molecule": {"base64data": opt_mol, "filetype": "xyz"},
         "system": {
             "params": {
                 "basisname": "def2-tzvp",
