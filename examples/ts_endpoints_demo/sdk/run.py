@@ -1,10 +1,10 @@
-import base64
 import os
 
 from promethium.client import PromethiumClient
 from promethium.models import (
     CreateTransitionStateOptimizationFromEndpointsWorkflowRequest,
 )
+from promethium.utils import base64encode
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -13,8 +13,8 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-reactant = base64.b64encode(
-    b"""
+reactant = base64encode(
+"""
  C 0.797293840 1.081303780 -0.164555970
  C -0.547182890 0.998873790 0.574238880
  H -0.395761920 0.541241890 1.549831680
@@ -28,10 +28,10 @@ reactant = base64.b64encode(
  H 0.720901850 1.693360650 -1.064286780
  H -2.139998560 0.645187870 -0.958893800 
 """
-).decode("utf-8")
+)
 
-product = base64.b64encode(
-    b"""
+product = base64encode(
+"""
  C -1.480477590 0.370142220 -0.164123070
  C -0.251557300 1.224758920 0.164042060
  H 0.085104930 1.819910830 -0.680028190
@@ -45,7 +45,7 @@ product = base64.b64encode(
  H -2.172374500 0.318049500 0.679016970
  H 1.279126720 0.240880770 1.435315840 
 """
-).decode("utf-8")
+)
 
 job_params = {
     "name": f"api_ts_opt",

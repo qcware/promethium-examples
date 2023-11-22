@@ -1,4 +1,3 @@
-import base64
 import os
 
 from promethium.client import PromethiumClient

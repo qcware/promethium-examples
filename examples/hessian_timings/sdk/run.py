@@ -1,10 +1,10 @@
-import base64
 import os
 
 from promethium.client import PromethiumClient
 from promethium.models import (
     CreateGeometryOptimizationWorkflowRequest,
 )
+from promethium.utils import base64encode
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -13,8 +13,8 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(
-    b"""
+mol = base64encode(
+"""
     O           -1.510407226976     0.757898746844     0.000000000000
     O           -0.553334234073    -1.306832947272     0.000000000000
     C            0.851836372408     0.670262334922     0.000000000000
@@ -25,7 +25,7 @@ mol = base64.b64encode(
     H            2.990077611988     0.580280001156     0.000000000000
     H           -2.306286818048     0.180092981979     0.000000000000
 """
-).decode("utf-8")
+)
 
 job_params = {
     "name": "api_hessian_timings",
