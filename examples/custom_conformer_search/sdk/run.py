@@ -1,11 +1,11 @@
 import copy
 import os
 
-from promethium.client import PromethiumClient
-from promethium.models import (
+from promethium_sdk.client import PromethiumClient
+from promethium_sdk.models import (
     CreateConformerSearchWorkflowRequest,
 )
-from promethium.utils import (
+from promethium_sdk.utils import (
     base64encode,
 )
 

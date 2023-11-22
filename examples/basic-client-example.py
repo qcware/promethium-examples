@@ -3,14 +3,14 @@ from uuid import UUID
 
 from pydantic import UUID4
 
-from promethium.models import (
+from promethium_sdk.models import (
     Workflow,
     WorkflowKind,
     WorkflowResult,
     WorkflowStatus,
     CreateGeometryOptimizationWorkflowRequest,
 )
-from promethium.client import PromethiumClient
+from promethium_sdk.client import PromethiumClient
 
 
 prom = PromethiumClient()
