@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import UUID4
 
-from promethium.models import (
+from promethium_sdk.models import (
     GeometryOptimizationInputSpec,
     CreateGeometryOptimizationWorkflowRequest,
     Kind2,
@@ -18,8 +18,8 @@ from promethium.models import (
     GpuType,
     ValidFileExtensions,
 )
-from promethium.client import PromethiumClient
-from promethium.utils import base64encode
+from promethium_sdk.client import PromethiumClient
+from promethium_sdk.utils import base64encode
 
 
 prom = PromethiumClient()

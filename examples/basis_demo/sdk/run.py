@@ -1,8 +1,8 @@
 import os
 
-from promethium.utils import base64encode
-from promethium.client import PromethiumClient
-from promethium.models import (
+from promethium_sdk.utils import base64encode
+from promethium_sdk.client import PromethiumClient
+from promethium_sdk.models import (
     CreateGeometryOptimizationWorkflowRequest,
     CreateSinglePointCalculationWorkflowRequest,
 )

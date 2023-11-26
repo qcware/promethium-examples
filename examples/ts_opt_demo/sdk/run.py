@@ -1,10 +1,10 @@
 import os
 
-from promethium.client import PromethiumClient
-from promethium.models import (
+from promethium_sdk.client import PromethiumClient
+from promethium_sdk.models import (
     CreateTransitionStateOptimizationWorkflowRequest,
 )
-from promethium.utils import base64encode
+from promethium_sdk.utils import base64encode
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
