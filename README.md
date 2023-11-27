@@ -30,7 +30,7 @@ Python client.
 After doing this, in Python you can simply instantiate the Promethium Client
 directly using:
 ```
-from promethium import PromethiumClient
+from promethium_sdk import PromethiumClient
 
 pc = PromethiumClient()
 ```
