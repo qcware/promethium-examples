@@ -5,6 +5,9 @@ import os
 
 from promethium_sdk.utils import wait_for_workflows_to_complete
 
+# This example expects that your API Credentials have been stored as
+# an environment variable
+
 # Est. Runtimes:
 # Wall-clock / real-world & billable compute time:
 # Nirmatrelvir = <1 min
@@ -16,8 +19,7 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-# Set header to use your API key, requires that your API key is stored as
-# an environment variable
+# Set header to use your API key
 headers = {
     "x-api-key": os.environ["PM_API_KEY"],
     "accept": "application/json",
