@@ -1,15 +1,9 @@
+import base64
+import json
+import httpx
 import os
 
-from promethium_sdk.utils import base64encode
-from promethium_sdk.client import PromethiumClient
-from promethium_sdk.models import (
-    CreateSinglePointCalculationWorkflowRequest,
-)
-
-# This example expects that your API Credentials have been configured and
-# stored in a .promethium.ini file
-# If that hasn't been completed, for instructions see:
-# https://github.com/qcware/promethium-examples/tree/main#configuring-your-api-credentials
+from promethium_sdk.utils import wait_for_workflows_to_complete
 
 # Est. Runtimes:
 # Wall-clock / real-world & billable compute time:
@@ -22,9 +16,20 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
+# Set header to use your API key, requires that your API key is stored as
+# an environment variable
+headers = {
+    "x-api-key": os.environ["PM_API_KEY"],
+    "accept": "application/json",
+    "content-type": "application/json",
+}
+
+client = httpx.Client(base_url=base_url, headers=headers)
+
 # Specify the input xyz file contents and prepare (base64encode) for API submission
 # Molecule is Nirmatrelvir
-input_mol = base64encode("""
+input_mol = base64.b64encode(
+    b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -94,6 +99,8 @@ input_mol = base64encode("""
     O         3.42325       -5.20351       -2.69779"""
 )
 
+input_mol = input_mol.decode("utf-8")
+
 # SPC (Single Point Calculation) Workflow Configuration
 spc_name = "nirmatrelvir_api_spc"
 job_params = {
@@ -122,28 +129,42 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-# Instantiate the Promethium client and submit a SPC workflow using the above configuration
-prom = PromethiumClient()
-spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
-spc_workflow = prom.workflows.submit(spc_payload)
-print(f"Workflow {spc_workflow.name} submitted with id: {spc_workflow.id}")
+# submit a SPC workflow using the above configuration
+payload = job_params
+jobname = payload["name"]
+response = client.post("/v0/workflows", json=payload)
+with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+    fp.write(json.dumps(response.json()))
+workflow_id = response.json()["id"]
+print(f"Workflow {jobname} submitted with id: {workflow_id}")
 
 # Wait for the workflow to finish
-prom.workflows.wait(spc_workflow.id)
+workflow = wait_for_workflows_to_complete(
+    client=client,
+    workflow_ids=[workflow_id],
+    log_events=["STATE_CHANGES"],
+    timeout=3600,
+)[workflow_id]
 
 # Get the status and Wall-clock time:
-spc_workflow = prom.workflows.get(spc_workflow.id)
-print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status}")
-print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
+response = client.get(f"v0/workflows/{workflow_id}").json()
+with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+    fp.write(json.dumps(response))
+name = response["name"]
+timetaken = response["duration_seconds"]
+print(f"Workflow {jobname} completed with status: {workflow['status']}")
+print(f"Workflow completed in {timetaken:.2f}s")
 
 # Obtain the numeric results:
-spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
-
-# Extract and print energy contained in the numeric results:
-energy = spc_results.results["rhf"]["energy"]
+response = client.get(f"/v0/workflows/{workflow_id}/results").json()
+with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+    fp.write(json.dumps(response))
+energy = response["results"]["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
 # Download results:
-prom.workflows.download(spc_workflow.id)
+response = client.get(
+    f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
+)
+with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+    fp.write(response.content)
