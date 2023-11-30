@@ -1,9 +1,12 @@
-import base64
 import json
 import httpx
 import os
 
-from utils import wait_for_workflows_to_complete
+from promethium_sdk.utils import (
+    base64decode,
+    base64encode,
+    wait_for_workflows_to_complete,
+)
 
 
 foldername = "output"
@@ -13,8 +16,8 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64.b64encode(
-    b"""
+mol = base64encode(
+"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -83,8 +86,6 @@ mol = base64.b64encode(
     H         6.28295       -7.90612       -0.99587
     O         3.42325       -5.20351       -2.69779"""
 )
-
-mol = mol.decode("utf-8")
 
 job_params = {
     "name": "paxlovid_api_geomopt",
@@ -158,7 +159,7 @@ with open(f"{foldername}/{jobname}_results.json", "w") as fp:
 energy = response["results"]["optimization"]["energy"]
 mol = response["results"]["artifacts"]["optimized-molecule"]["base64data"]
 print(energy)
-print(base64.b64decode(mol).decode("utf-8"))
+print(base64decode(mol))
 
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
