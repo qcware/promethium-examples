@@ -4,5 +4,5 @@ Runs a geometry optimization and a frequency calculation with the `print_hessian
 
 To run:
 ```
-PYTHONPATH=.. python run.py
+python run.py
 ```

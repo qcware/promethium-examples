@@ -1,10 +1,11 @@
-import requests
-import base64
 import json
-import httpx
 import os
 
-from utils import wait_for_workflows_to_complete
+import httpx
+from promethium_sdk.utils import (
+    base64encode,
+    wait_for_workflows_to_complete,
+)
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -29,9 +30,9 @@ workflow_ids = []
 
 for i in range(1, n + 1):
     with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:
-        reactant = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
+        reactant = base64encode(bytes(fp.read(), "utf-8"))
     with open(os.path.join(dir_path, f"{i}/product.xyz"), "r") as fp:
-        product = base64.b64encode(bytes(fp.read(), "utf-8")).decode("utf-8")
+        product = base64encode(bytes(fp.read(), "utf-8"))
 
     job_params = {
         "name": f"api-ts-opt-{i}",
