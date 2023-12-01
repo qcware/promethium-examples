@@ -4,5 +4,5 @@ Calculates four reaction paths for solvent-mediated proton transfer. One in the 
 
 To run:
 ```
-PYTHONPATH=.. python run.py
+python run.py
 ```
