@@ -1,6 +1,6 @@
 ## Examples
 
-* [basis_demo](basis_demo) Example showing a geometry optimization with B3LYP/def2-SVP and a single point on the optimized structure with B3LYP/def2-TZVP.
+* [sequential_GO_to_SPC](sequential_GO_to_SPC) Example showing a geometry optimization with B3LYP/def2-SVP and a single point on the optimized structure with B3LYP/def2-TZVP.
 * [batch_conformer_search](batch_conformer_search) Example showing how to run a batch of conformer searches over different SMILES strings.
 * [custom_conformer_search](custom_conformer_search) Example showing how to run a customized conformer search using 3 stages of DFT filters at different levels of theory.
 * [hessian_timings](hessian_timings) Example showing a geometry optimization + frequency calculation with the `print_hessian_timings` flag set to `True`.
