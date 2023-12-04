@@ -4,5 +4,5 @@ This example takes the reactant and product structures from the supplemental mat
 
 To run:
 ```
-PYTHONPATH=.. python run.py
+python run.py
 ```
