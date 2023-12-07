@@ -162,11 +162,12 @@ with open(f"{foldername}/{go_workflow.name}_results.json", "w") as fp:
 
 # Extract and print the energy contained in the numeric results:
 energy = go_results.results["optimization"]["energy"]
-print(energy)
+print(f"Energy (Hartrees) = {energy}")
 
 # Extract and print the optimized geometry contained in the numeric results:
 molecule_str = go_results.get_artifact("optimized-molecule")
-print(molecule_str)
+print("The optimized geometry:")
+print(f'{molecule_str}')
 
 # Download results:
 prom.workflows.download(go_workflow.id)

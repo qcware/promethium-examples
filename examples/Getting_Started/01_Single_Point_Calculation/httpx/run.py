@@ -6,7 +6,10 @@ import os
 from promethium_sdk.utils import wait_for_workflows_to_complete
 
 # This example expects that your API Credentials have been stored as
-# an environment variable
+# an environment variable.
+#
+# If you do not have the SDK installed, remove or comment out the references
+# to the `wait_for_workflows_to_complete` function.
 
 # Est. Runtimes:
 # Wall-clock / real-world & billable compute time:
@@ -157,7 +160,7 @@ timetaken = response["duration_seconds"]
 print(f"Workflow {jobname} completed with status: {workflow['status']}")
 print(f"Workflow completed in {timetaken:.2f}s")
 
-# Obtain the numeric results:
+# Extract and print the energy contained in the numeric results:
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
 with open(f"{foldername}/{jobname}_results.json", "w") as fp:
     fp.write(json.dumps(response))

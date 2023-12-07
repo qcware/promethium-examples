@@ -141,7 +141,7 @@ spc_results = prom.workflows.results(spc_workflow.id)
 with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
-# Extract and print energy contained in the numeric results:
+# Extract and print the energy contained in the numeric results:
 energy = spc_results.results["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
