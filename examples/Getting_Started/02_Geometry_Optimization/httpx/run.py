@@ -1,19 +1,19 @@
+import base64
+import json
+import httpx
 import os
 
-from promethium_sdk.utils import base64encode
-from promethium_sdk.client import PromethiumClient
-from promethium_sdk.models import (
-    CreateSinglePointCalculationWorkflowRequest,
-)
+from promethium_sdk.utils import wait_for_workflows_to_complete
 
-# This example expects that your API Credentials have been configured and
-# stored in a .promethium.ini file
-# If that hasn't been completed, for instructions see:
-# https://github.com/qcware/promethium-examples/tree/main#configuring-your-api-credentials
+# This example expects that your API Credentials have been stored as
+# an environment variable.
+#
+# If you do not have the SDK installed, remove or comment out the references
+# to the `wait_for_workflows_to_complete` function.
 
 # Est. Runtimes:
 # Wall-clock / real-world & billable compute time:
-# Nirmatrelvir = <1 min
+# Nirmatrelvir = <10 min
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -22,9 +22,19 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
+# Set header to use your API key
+headers = {
+    "x-api-key": os.environ["PM_API_KEY"],
+    "accept": "application/json",
+    "content-type": "application/json",
+}
+
+client = httpx.Client(base_url=base_url, headers=headers)
+
 # Specify the input xyz file contents and prepare (base64encode) for API submission
 # Molecule is Nirmatrelvir
-input_mol = base64encode("""
+input_mol = base64.b64encode(
+    b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -94,56 +104,98 @@ input_mol = base64encode("""
     O         3.42325       -5.20351       -2.69779"""
 )
 
-# SPC (Single Point Calculation) Workflow Configuration
-spc_name = "nirmatrelvir_api_spc"
+input_mol = input_mol.decode("utf-8")
+
+# GO (Geometry Optimization) Workflow Configuration
+workflow_name = "nirmatrelvir_api_go"
 job_params = {
-    "name": spc_name,
+    "name": workflow_name,
     "version": "v1",
-    "kind": "SinglePointCalculation",
+    "kind": "GeometryOptimization",
     "parameters": {
         "molecule": {"base64data": input_mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": "def2-tzvp",
+                "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "methodname": "wb97m-v",
-                "xc_grid_scheme": "SG2",
+                "methodname": "b3lyp-d3",
+                "xc_grid_scheme": "SG1"
             }
         },
         "hf": {
-            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "params": {
+                "charge": 0,
+                "multiplicity": 1,
+                "g_convergence": 0.000001
+            }
+        },
+        "pes": {
+            "params": {
+                "coordinate_system_name": "redundant",
+                "covalent_scale": 1.3,
+                "directional_derivative_h": 0.001,
+                "hessian_h": 0.001
+            }
+        },
+        "optimization": {
+            "params": {
+                "maxiter": 1000,
+                "g_convergence": 0.00045
+            },
             "outputs": {
                 "gradient": False,
-                "polarizability": False,
+                "hessian": False,
                 "dipole_derivative": False,
-            },
+                "vibrational_frequencies": False
+            }
         },
     },
     "resources": {"gpu_type": gpu_type},
 }
 
-# Instantiate the Promethium client and submit a SPC workflow using the above configuration
-prom = PromethiumClient()
-spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
-spc_workflow = prom.workflows.submit(spc_payload)
-print(f"Workflow {spc_workflow.name} submitted with id: {spc_workflow.id}")
+# submit a GO workflow using the above configuration
+payload = job_params
+jobname = payload["name"]
+response = client.post("/v0/workflows", json=payload)
+with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+    fp.write(json.dumps(response.json()))
+workflow_id = response.json()["id"]
+print(f"Workflow {jobname} submitted with id: {workflow_id}")
 
 # Wait for the workflow to finish
-prom.workflows.wait(spc_workflow.id)
+workflow = wait_for_workflows_to_complete(
+    client=client,
+    workflow_ids=[workflow_id],
+    log_events=["STATE_CHANGES"],
+    timeout=3600,
+)[workflow_id]
 
 # Get the status and Wall-clock time:
-spc_workflow = prom.workflows.get(spc_workflow.id)
-print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status}")
-print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
+response = client.get(f"v0/workflows/{workflow_id}").json()
+with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+    fp.write(json.dumps(response))
+name = response["name"]
+timetaken = response["duration_seconds"]
+print(f"Workflow {jobname} completed with status: {workflow['status']}")
+print(f"Workflow completed in {timetaken:.2f}s")
 
 # Obtain the numeric results:
-spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
+response = client.get(f"/v0/workflows/{workflow_id}/results", headers=headers).json()
+with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+    fp.write(json.dumps(response))
 
 # Extract and print the energy contained in the numeric results:
-energy = spc_results.results["rhf"]["energy"]
+energy = response["results"]["optimization"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
+# Extract and print the optimized geometry contained in the numeric results:
+molecule_str = response["results"]["artifacts"]["optimized-molecule"]["base64data"]
+print("The optimized geometry:")
+print(f'{base64.b64decode(molecule_str).decode("utf-8")}')
+
 # Download results:
-prom.workflows.download(spc_workflow.id)
+response = client.get(
+    f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
+)
+with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+    fp.write(response.content)

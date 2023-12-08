@@ -3,7 +3,7 @@ import os
 from promethium_sdk.utils import base64encode
 from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
-    CreateSinglePointCalculationWorkflowRequest,
+    CreateGeometryOptimizationWorkflowRequest,
 )
 
 # This example expects that your API Credentials have been configured and
@@ -13,7 +13,7 @@ from promethium_sdk.models import (
 
 # Est. Runtimes:
 # Wall-clock / real-world & billable compute time:
-# Nirmatrelvir = <1 min
+# Nirmatrelvir = <10 min
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -94,56 +94,80 @@ input_mol = base64encode("""
     O         3.42325       -5.20351       -2.69779"""
 )
 
-# SPC (Single Point Calculation) Workflow Configuration
-spc_name = "nirmatrelvir_api_spc"
+# GO (Geometry Optimization) Workflow Configuration
+workflow_name = "nirmatrelvir_api_go"
 job_params = {
-    "name": spc_name,
+    "name": workflow_name,
     "version": "v1",
-    "kind": "SinglePointCalculation",
+    "kind": "GeometryOptimization",
     "parameters": {
         "molecule": {"base64data": input_mol, "filetype": "xyz"},
         "system": {
             "params": {
-                "basisname": "def2-tzvp",
+                "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "methodname": "wb97m-v",
-                "xc_grid_scheme": "SG2",
+                "methodname": "b3lyp-d3",
+                "xc_grid_scheme": "SG1"
             }
         },
         "hf": {
-            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "params": {
+                "charge": 0,
+                "multiplicity": 1,
+                "g_convergence": 0.000001
+            }
+        },
+        "pes": {
+            "params": {
+                "coordinate_system_name": "redundant",
+                "covalent_scale": 1.3,
+                "directional_derivative_h": 0.001,
+                "hessian_h": 0.001
+            }
+        },
+        "optimization": {
+            "params": {
+                "maxiter": 1000,
+                "g_convergence": 0.00045
+            },
             "outputs": {
                 "gradient": False,
-                "polarizability": False,
+                "hessian": False,
                 "dipole_derivative": False,
-            },
+                "vibrational_frequencies": False
+            }
         },
     },
     "resources": {"gpu_type": gpu_type},
 }
 
-# Instantiate the Promethium client and submit a SPC workflow using the above configuration
+# Instantiate the Promethium client and submit a GO workflow using the above configuration
 prom = PromethiumClient()
-spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
-spc_workflow = prom.workflows.submit(spc_payload)
-print(f"Workflow {spc_workflow.name} submitted with id: {spc_workflow.id}")
+go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
+go_workflow = prom.workflows.submit(go_payload)
+print(f"Workflow {go_workflow.name} submitted with id: {go_workflow.id}")
 
 # Wait for the workflow to finish
-prom.workflows.wait(spc_workflow.id)
+prom.workflows.wait(go_workflow.id)
 
 # Get the status and Wall-clock time:
-spc_workflow = prom.workflows.get(spc_workflow.id)
-print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status}")
-print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
+go_workflow = prom.workflows.get(go_workflow.id)
+print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}")
+print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
 
 # Obtain the numeric results:
-spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
+go_results = prom.workflows.results(go_workflow.id)
+with open(f"{foldername}/{go_workflow.name}_results.json", "w") as fp:
+    fp.write(go_results.model_dump_json(indent=2))
 
 # Extract and print the energy contained in the numeric results:
-energy = spc_results.results["rhf"]["energy"]
+energy = go_results.results["optimization"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
+# Extract and print the optimized geometry contained in the numeric results:
+molecule_str = go_results.get_artifact("optimized-molecule")
+print("The optimized geometry:")
+print(f'{molecule_str}')
+
 # Download results:
-prom.workflows.download(spc_workflow.id)
+prom.workflows.download(go_workflow.id)
