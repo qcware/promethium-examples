@@ -17,6 +17,7 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 mol = base64encode(
+"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
