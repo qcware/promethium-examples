@@ -1,6 +1,5 @@
 # Instructions
-Submit the following command in terminal
-Replace the PM_API_KEY variable with your API key
+Replace the PM_API_KEY variable with your API key and submit the following command in your terminal:
 
 ```
 curl --location 'https://api.promethium.qcware.com/v0/workflows' \

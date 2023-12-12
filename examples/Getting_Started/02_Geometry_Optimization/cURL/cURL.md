@@ -1,12 +1,11 @@
 # Instructions
-Submit the following command in terminal
-Replace the PM_API_KEY variable with your API key
+Replace the PM_API_KEY variable with your API key and submit the following command in your terminal:
 
 ```
 curl --location 'https://api.promethium.qcware.com/v0/workflows' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
---header 'X-API-Key: jpq5KZpDR4ubcRlkjxLa_w.b3JnX2tmbkpSaXhlSng5MmFtdVI.DjtUGKwgz4jcSSPaf30SZKB6l6MkQcmOinrOU0NeBSGR0YJR' \
+--header 'X-API-Key: PM_API_KEY' \
 --data '{
     "name": "nirmatrelvir_api_go",
     "version": "v1",
