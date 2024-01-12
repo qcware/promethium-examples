@@ -80,7 +80,7 @@ job_params = {
         "system": {
             "params": {
                 "basisname": "def2-svp",
-                "xc_functional_name": "hf",
+                "methodname": "hf",
                 "threshold_pq": 1e-12
             }
         },

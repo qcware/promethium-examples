@@ -490,7 +490,7 @@ job_params = {
         },
         "system": {
             "params": {
-                "xc_functional_name": "hf",
+                "methodname": "hf",
                 "basisname": "jun-cc-pvdz",
                 "jkfit_basisname": "jun-cc-pvdz-jkfit",
                 "k_grid_scheme": "GRID1",

@@ -69,7 +69,7 @@ fragsA = [[0,23,24,30,31,32,33],[1,8,9,10,12,13,14,17,18,36,37,38,39,40,],[2,19,
 
 labelsA = []
 for idx in range(len(fragsA)):
-    labelsA.append('A%d' % (idx+1))    
+    labelsA.append('A%d' % (idx+1))
 
 monomerB = base64encode(
 """
@@ -865,7 +865,7 @@ fragsB = [[0,22,],[1,2,3,4,6,7,16,17,18,19,20,21,23,],[5,28,29,30,31,379,],[8,9,
 
 labelsB = []
 for idx in range(len(fragsB)):
-    labelsB.append('B%d' % (idx+1))    
+    labelsB.append('B%d' % (idx+1))
 
 job_params = {
   "name": "fsapt-test",
@@ -893,7 +893,7 @@ job_params = {
         "system": {
             "params": {
                 "basisname": "def2-svp",
-                "xc_functional_name": "hf",
+                "methodname": "hf",
                 "threshold_pq": 1e-10
             }
         },
