@@ -9,14 +9,13 @@ from promethium_sdk.utils import (
     base64encode,
 )
 
-# Note:
 # Est. Runtimes:
 # Wall-clock / Real-world time:
 # Diethyl Ether = <10 mins
 # Daridorexant = <15 mins
 #
-# Billable Compute time:
-# Diethyl Ether = <6 mins
+# Billable compute time:
+# Diethyl Ether = <10 mins
 # Daridorexant = ~3.5-4.0 hours
 
 foldername = "output"

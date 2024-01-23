@@ -1,11 +1,19 @@
+import base64
+import json
+import httpx
 import os
 
-from promethium_sdk.utils import base64encode
-from promethium_sdk.client import PromethiumClient
-from promethium_sdk.models import (
-    CreateGeometryOptimizationWorkflowRequest,
-    CreateSinglePointCalculationWorkflowRequest,
-)
+from promethium_sdk.utils import wait_for_workflows_to_complete
+
+# This example expects that your API Credentials have been stored as
+# an environment variable.
+#
+# If you do not have the SDK installed, remove or comment out the references
+# to the `wait_for_workflows_to_complete` function.
+
+# Est. Runtimes:
+# Wall-clock / real-world & billable compute time:
+# Nirmatrelvir = <1 min
 
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
@@ -14,7 +22,19 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64encode("""
+# Set header to use your API key
+headers = {
+    "x-api-key": os.environ["PM_API_KEY"],
+    "accept": "application/json",
+    "content-type": "application/json",
+}
+
+client = httpx.Client(base_url=base_url, headers=headers)
+
+# Specify the input xyz file contents and prepare (base64encode) for API submission
+# Molecule is Nirmatrelvir
+input_mol = base64.b64encode(
+    b"""
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -84,120 +104,72 @@ mol = base64encode("""
     O         3.42325       -5.20351       -2.69779"""
 )
 
-go_name = "paxlovid_api_geomopt"
-job_params = {
-    "name": go_name,
-    "version": "v1",
-    "kind": "GeometryOptimization",
-    "parameters": {
-        "molecule": {"base64data": mol, "filetype": "xyz"},
-        "system": {
-            "params": {
-                "basisname": "def2-svp",
-                "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": "b3lyp",
-                "xc_grid_scheme": "SG1",
-                "threshold_pq": 1.0e-12,
-            },
-        },
-        "hf": {
-            "params": {
-                "multiplicity": 1,
-                "charge": 0,
-                "g_convergence": 1.0e-6,
-                "print_level": 0,
-            },
-        },
-        "pes": {
-            "params": {"coordinate_system_name": "redundant"},
-        },
-        "optimization": {
-            "params": {"maxiter": 200, "g_convergence": 4.5e-4},
-            "outputs": {"gradient": False, "vibrational_frequencies": False},
-        },
-    },
-    "resources": {"gpu_type": gpu_type},
-}
+input_mol = input_mol.decode("utf-8")
 
-prom = PromethiumClient()
-go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
-go_workflow = prom.workflows.submit(go_payload)
-
-prom.workflows.wait(go_workflow.id)
-
-go_workflow = prom.workflows.get(go_workflow.id)
-print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}")
-print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
-
-go_results = prom.workflows.results(go_workflow.id)
-with open(f"{foldername}/{go_workflow.name}_results.json", "w") as fp:
-    fp.write(go_results.model_dump_json(indent=2))
-
-# Numeric results:
-energy = go_results.results["optimization"]["energy"]
-molecule_str = go_results.get_artifact("optimized-molecule")
-print(energy)
-print(molecule_str)
-
-# Download:
-prom.workflows.download(go_workflow.id)
-
-# Re-encode the molecule:
-opt_mol = base64encode(molecule_str)
-
-# SPC: SinglePointCalculation
-spc_name = "paxlovid_api_spe"
+# SPC (Single Point Calculation) Workflow Configuration
+spc_name = "nirmatrelvir_api_spc"
 job_params = {
     "name": spc_name,
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {"base64data": opt_mol, "filetype": "xyz"},
+        "molecule": {"base64data": input_mol, "filetype": "xyz"},
         "system": {
             "params": {
                 "basisname": "def2-tzvp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": "b3lyp",
-                "xc_grid_scheme": "SG1",
-                "threshold_pq": 1.0e-12,
-            },
+                "methodname": "wb97m-v",
+                "xc_grid_scheme": "SG2",
+            }
         },
         "hf": {
-            "params": {
-                "multiplicity": 1,
-                "charge": 0,
-                "g_convergence": 1.0e-6,
-                "print_level": 0,
+            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "outputs": {
+                "gradient": False,
+                "polarizability": False,
+                "dipole_derivative": False,
             },
-        },
-        "pes": {
-            "params": {"coordinate_system_name": "redundant"},
-        },
-        "optimization": {
-            "params": {"maxiter": 200, "g_convergence": 1.0e-4},
-            "outputs": {"gradient": False, "vibrational_frequencies": False},
         },
     },
     "resources": {"gpu_type": gpu_type},
 }
 
-spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
-print(f"Submitting {spc_name}...", end="")
-spc_workflow = prom.workflows.submit(spc_payload)
+# submit a SPC workflow using the above configuration
+payload = job_params
+jobname = payload["name"]
+response = client.post("/v0/workflows", json=payload)
+with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+    fp.write(json.dumps(response.json()))
+workflow_id = response.json()["id"]
+print(f"Workflow {jobname} submitted with id: {workflow_id}")
 
-prom.workflows.wait(spc_workflow.id)
+# Wait for the workflow to finish
+workflow = wait_for_workflows_to_complete(
+    client=client,
+    workflow_ids=[workflow_id],
+    log_events=["STATE_CHANGES"],
+    timeout=3600,
+)[workflow_id]
 
-spc_workflow = prom.workflows.get(spc_workflow.id)
-print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status}")
-print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
+# Get the status and Wall-clock time:
+response = client.get(f"v0/workflows/{workflow_id}").json()
+with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+    fp.write(json.dumps(response))
+name = response["name"]
+timetaken = response["duration_seconds"]
+print(f"Workflow {jobname} completed with status: {workflow['status']}")
+print(f"Workflow completed in {timetaken:.2f}s")
 
-spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
+# Extract and print the energy contained in the numeric results:
+response = client.get(f"/v0/workflows/{workflow_id}/results").json()
+with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+    fp.write(json.dumps(response))
+energy = response["results"]["rhf"]["energy"]
+print(f"Energy (Hartrees) = {energy}")
 
-# Numeric results:
-energy = spc_results.results["rhf"]["energy"]
-print(energy)
-
-# Download:
-prom.workflows.download(go_workflow.id)
+# Download results:
+response = client.get(
+    f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
+)
+with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+    fp.write(response.content)
