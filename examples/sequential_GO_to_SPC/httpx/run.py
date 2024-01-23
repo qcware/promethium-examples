@@ -97,7 +97,7 @@ job_params = {
             "params": {
                 "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": "b3lyp",
+                "methodname": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
@@ -177,7 +177,7 @@ job_params = {
             "params": {
                 "basisname": "def2-tzvp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": "b3lyp",
+                "methodname": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },

@@ -26,7 +26,7 @@ mol = base64encode(
   H 1.570739680 -0.352353930 -1.351279720
   H -1.006075790 0.765688840 -1.469513700
   H -2.081021580 1.057364780 -0.006261000
-  H 1.429694710 0.407351920 1.319100730 
+  H 1.429694710 0.407351920 1.319100730
 """
 )
 
@@ -43,7 +43,7 @@ job_params = {
             "params": {
                 "basisname": "def2-svp",
                 "jkfit_basisname": "def2-universal-jkfit",
-                "xc_functional_name": "b3lyp",
+                "methodname": "b3lyp",
                 "xc_grid_scheme": "SG1",
                 "threshold_pq": 1.0e-12,
             },
