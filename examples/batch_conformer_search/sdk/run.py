@@ -47,7 +47,6 @@ job_params = {
                     "rmsd_threshold": 0.3,
                     "coulomb_distance_threshold": 0.005,
                 },
-                "key": "FF",
             },
             {
                 "filtertype": "ANI",
@@ -57,7 +56,6 @@ job_params = {
                     "distance_threshold": 0.005,
                     "do_geometry_optimization": True,
                 },
-                "key": "ANI",
             },
         ],
     },
@@ -92,7 +90,6 @@ coarse_dft_filter = {
         "type": "core_dfjk",
         "params": {}
     },
-    "key": "DFT Stage 1 (Coarse Filtering)"
 }
 
 prom = PromethiumClient()

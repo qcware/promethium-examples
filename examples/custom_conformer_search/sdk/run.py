@@ -66,8 +66,7 @@ job_params = {
                 "jk_builder": {
                     "type": "core_dfjk",
                     "params": {}
-                },
-                "key": "DFT Stage 1"
+                }
             },
             {
                 "filtertype": "DFT",
@@ -96,8 +95,7 @@ job_params = {
                 "jk_builder": {
                     "type": "core_dfjk",
                     "params": {}
-                },
-                "key": "DFT Stage 2"
+                }
             },
             {
                 "filtertype": "DFT",
@@ -126,8 +124,7 @@ job_params = {
                 "jk_builder": {
                     "type": "core_dfjk",
                     "params": {}
-                },
-                "key": "DFT Stage 3"
+                }
             }
         ],
     },
