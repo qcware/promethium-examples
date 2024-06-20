@@ -145,7 +145,7 @@ job_params = {
             "outputs": {
                 "gradient": False,
                 "hessian": False,
-                "dipole_derivative": False,
+                "dipole_derivatives": False,
                 "vibrational_frequencies": False
             }
         },
