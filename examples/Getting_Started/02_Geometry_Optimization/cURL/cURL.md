@@ -45,7 +45,7 @@ curl --location 'https://api.promethium.qcware.com/v0/workflows' \
             "outputs": {
                 "gradient": false,
                 "hessian": false,
-                "dipole_derivative": false,
+                "dipole_derivatives": false,
                 "vibrational_frequencies": false
             }
         }

@@ -1,6 +1,6 @@
 import os
 
-from promethium_sdk.utils import base64encode
+from promethium_sdk.utils import base64encode, BYTES_PER_GB
 from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
     CreateGeometryOptimizationWorkflowRequest,
@@ -133,7 +133,7 @@ job_params = {
             "outputs": {
                 "gradient": False,
                 "hessian": False,
-                "dipole_derivative": False,
+                "dipole_derivatives": False,
                 "vibrational_frequencies": False
             }
         },
@@ -144,6 +144,15 @@ job_params = {
 # Instantiate the Promethium client and submit a GO workflow using the above configuration
 prom = PromethiumClient()
 go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
+
+# See how much GPU memory the workflow will use:
+go_memory = prom.workflows.memory(go_payload)
+print(f"Estimated GPU memory usage: {go_memory.prediction_bytes/BYTES_PER_GB} GB")
+print(
+    "Estimated GPU memory usage range: "
+    f"({go_memory.percentile_prediction_bytes['0.025']/BYTES_PER_GB}, "
+    f"{go_memory.percentile_prediction_bytes['0.975']/BYTES_PER_GB}) GB")
+
 go_workflow = prom.workflows.submit(go_payload)
 print(f"Workflow {go_workflow.name} submitted with id: {go_workflow.id}")
 
