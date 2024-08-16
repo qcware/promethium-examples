@@ -14,6 +14,8 @@ from promethium_sdk.models import (
 GPU_TYPE = "a100"
 INPUT_FOLDER = pathlib.Path(__file__).parent.resolve()
 OUTPUT_FOLDER = "output"
+WORKFLOW_TIMEOUT = int(os.getenv("PM_WORKFLOW_TIMEOUT", 864000))
+TASK_TIMEOUT = int(os.getenv("PM_TASK_TIMEOUT", 864000))
 
 if not os.path.exists(OUTPUT_FOLDER):
     os.makedirs(OUTPUT_FOLDER)
@@ -55,6 +57,7 @@ job_params = {
         },
     },
     "resources": {"gpu_type": GPU_TYPE},
+    "metadata": {"workflow_timeout": WORKFLOW_TIMEOUT, "task_timeout": TASK_TIMEOUT},
 }
 
 prom = PromethiumClient()

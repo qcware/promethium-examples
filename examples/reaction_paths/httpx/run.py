@@ -10,6 +10,8 @@ from promethium_sdk.utils import (
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+workflow_timeout = int(os.getenv("PM_WORKFLOW_TIMEOUT", 864000))
+task_timeout = int(os.getenv("PM_TASK_TIMEOUT", 864000))
 dir_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 )
@@ -98,6 +100,7 @@ for i in range(1, n + 1):
             },
         },
         "resources": {"gpu_type": gpu_type},
+        "metadata": {"workflow_timeout": workflow_timeout, "task_timeout": task_timeout},
     }
 
     payload = job_params
