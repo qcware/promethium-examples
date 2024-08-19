@@ -153,6 +153,19 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
+# add metadata only if environment variables exist
+metadata = {}
+workflow_timeout = os.getenv("PM_WORKFLOW_TIMEOUT")
+task_timeout = os.getenv("PM_TASK_TIMEOUT")
+
+if workflow_timeout:
+    metadata["workflow_timeout"] = int(workflow_timeout)
+if task_timeout:
+    metadata["task_timeout"] = int(task_timeout)
+if metadata:
+    job_params["metadata"] = metadata
+
+
 # submit a GO workflow using the above configuration
 payload = job_params
 jobname = payload["name"]
