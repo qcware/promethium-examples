@@ -7,7 +7,6 @@ from promethium_sdk.models import (
 from promethium_sdk.utils import base64encode
 
 foldername = "output"
-base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
@@ -82,12 +81,12 @@ workflow = prom.workflows.get(workflow.id)
 print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
-spc_results = prom.workflows.results(workflow.id)
+go_results = prom.workflows.results(workflow.id)
 with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
+    fp.write(go_results.model_dump_json(indent=2))
 
 # Numeric results:
-energy = spc_results.results["optimization"]["energy"]
+energy = go_results.results["optimization"]["energy"]
 print(energy)
 
 # Download:

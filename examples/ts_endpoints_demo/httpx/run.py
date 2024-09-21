@@ -92,17 +92,19 @@ job_params = {
                 "maxiter": 200,
             },
         },
-        "interpolation": {
-            "params": {
-                "rk_thresh": 1.0e-2,
-                "integrator": "rk45",
-                "dt": 0.01,
-                "nbeads": 11,
-            }
-        },
-        "neb": {"params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01}},
-        "fire": {
-            "params": {"g_convergence": 1.0e-2, "dt_start": 0.5, "alpha_start": 0.25}
+        "reaction_path": {
+            "path_method": "neb",
+            "interpolation": {
+                "method": "geodesic",
+                "params": {
+                    "nbeads": 21,
+                    "maxiter": 4,
+                },
+            },
+            "neb": {"params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01}},
+            "fire": {
+                "params": {"g_convergence": 1.0e-2, "dt_start": 0.5, "alpha_start": 0.25}
+            },
         },
         "prfo": {
             "params": {"eigenvector_convergence": 1.0e-4, "strict_convergence": True},

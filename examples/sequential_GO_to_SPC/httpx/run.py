@@ -168,7 +168,7 @@ with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
     fp.write(response.content)
 
 job_params = {
-    "name": "paxlovid_api_spe",
+    "name": "paxlovid_api_spc",
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {

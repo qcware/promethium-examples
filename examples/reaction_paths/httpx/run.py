@@ -78,22 +78,24 @@ for i in range(1, n + 1):
                     "maxiter": 200,
                 },
             },
-            "interpolation": {
-                "params": {
-                    "rk_thresh": 1.0e-3,
-                    "integrator": "rk45",
-                    "dt": 0.01,
-                    "nbeads": 11,
+            "reaction_path": {
+                "path_method": "neb",
+                "interpolation": {
+                    "method": "geodesic",
+                    "params": {
+                        "nbeads": 21,
+                        "maxiter": 4,
+                    },
                 },
-            },
-            "neb": {
-                "params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01},
-            },
-            "fire": {
-                "params": {
-                    "g_convergence": 5.0e-3,
-                    "dt_start": 0.5,
-                    "alpha_start": 0.25,
+                "neb": {
+                    "params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01},
+                },
+                "fire": {
+                    "params": {
+                        "g_convergence": 5.0e-3,
+                        "dt_start": 0.5,
+                        "alpha_start": 0.25,
+                    },
                 },
             },
         },

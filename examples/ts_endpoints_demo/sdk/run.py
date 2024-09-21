@@ -7,7 +7,6 @@ from promethium_sdk.models import (
 from promethium_sdk.utils import base64encode
 
 foldername = "output"
-base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
@@ -91,20 +90,22 @@ job_params = {
                 "maxiter": 200,
             },
         },
-        "interpolation": {
-            "params": {
-                "rk_thresh": 1.0e-2,
-                "integrator": "rk45",
-                "dt": 0.01,
-                "nbeads": 10,
-            }
-        },
-        "neb": {"params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01}},
-        "fire": {
-            "params": {"g_convergence": 1.0e-2, "dt_start": 0.5, "alpha_start": 0.25}
+        "reaction_path": {
+            "path_method": "neb",
+            "interpolation": {
+                "method": "geodesic",
+                "params": {
+                    "nbeads": 21,
+                    "maxiter": 4,
+                },
+            },
+            "neb": {"params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01}},
+            "fire": {
+                "params": {"g_convergence": 1.0e-2, "dt_start": 0.5, "alpha_start": 0.25}
+            },
         },
         "prfo": {
-            "params": {"eigenvector_convergence": 1.0e-4, "strict_convergence": True},
+            "params": {"eigenvector_convergence": 1.0e-5, "strict_convergence": True},
             "outputs": {"vibrational_frequencies": True},
         },
     },
@@ -121,12 +122,12 @@ workflow = prom.workflows.get(workflow.id)
 print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
-spc_results = prom.workflows.results(workflow.id)
+tsofe_results = prom.workflows.results(workflow.id)
 with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
-    fp.write(spc_results.model_dump_json(indent=2))
+    fp.write(tsofe_results.model_dump_json(indent=2))
 
 # Optimized molecule:
-optimized_molecule = spc_results.get_artifact("optimized-molecule")
+optimized_molecule = tsofe_results.get_artifact("optimized-molecule")
 print(optimized_molecule)
 
 # Download:
