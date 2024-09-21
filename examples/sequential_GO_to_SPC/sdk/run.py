@@ -8,7 +8,6 @@ from promethium_sdk.models import (
 )
 
 foldername = "output"
-base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
 if not os.path.exists(foldername):
@@ -146,7 +145,7 @@ prom.workflows.download(go_workflow.id)
 opt_mol = base64encode(molecule_str)
 
 # SPC: SinglePointCalculation
-spc_name = "paxlovid_api_spe"
+spc_name = "paxlovid_api_spc"
 job_params = {
     "name": spc_name,
     "version": "v1",

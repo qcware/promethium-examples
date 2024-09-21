@@ -66,7 +66,7 @@ job_params = {
             "params": {
                 "maxiter": 200,
                 "strict_convergence": True,
-                "eigenvector_convergence": 1e-4,
+                "eigenvector_convergence": 1e-5,
             },
             "outputs": {"vibrational_frequencies": True},
         },

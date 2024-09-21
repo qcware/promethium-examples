@@ -9,7 +9,6 @@ from promethium_sdk.utils import (
 )
 
 foldername = "output"
-base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 dir_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
@@ -73,22 +72,24 @@ for i in range(1, n + 1):
                     "maxiter": 200,
                 },
             },
-            "interpolation": {
-                "params": {
-                    "rk_thresh": 1.0e-3,
-                    "integrator": "rk45",
-                    "dt": 0.01,
-                    "nbeads": 11,
+            "reaction_path": {
+                "path_method": "neb",
+                "interpolation": {
+                    "method": "geodesic",
+                    "params": {
+                        "nbeads": 21,
+                        "maxiter": 4,
+                    },
                 },
-            },
-            "neb": {
-                "params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01},
-            },
-            "fire": {
-                "params": {
-                    "g_convergence": 5.0e-3,
-                    "dt_start": 0.5,
-                    "alpha_start": 0.25,
+                "neb": {
+                    "params": {"force_constant_upper": 0.10, "force_constant_lower": 0.01},
+                },
+                "fire": {
+                    "params": {
+                        "g_convergence": 5.0e-3,
+                        "dt_start": 0.5,
+                        "alpha_start": 0.25,
+                    },
                 },
             },
         },

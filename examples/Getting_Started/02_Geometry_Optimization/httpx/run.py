@@ -133,8 +133,8 @@ job_params = {
             "params": {
                 "coordinate_system_name": "redundant",
                 "covalent_scale": 1.3,
-                "directional_derivative_h": 0.001,
-                "hessian_h": 0.001
+                "directional_derivative_h": 0.01,
+                "hessian_h": 0.01
             }
         },
         "optimization": {
