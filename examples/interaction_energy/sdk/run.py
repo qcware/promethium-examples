@@ -6,6 +6,8 @@ from promethium_sdk.models import (
 )
 from promethium_sdk.utils import base64encode
 
+KCAL_PER_MOL_PER_HARTREE = 627.5095
+
 foldername = "output"
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
@@ -13,7 +15,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 moleculeA_adenine = base64encode(
-"""
+"""15
+
 N 0.2793014000 2.4068393000 -0.6057517000
 C -1.0848570000 2.4457461000 -0.5511608000
 H -1.6594403000 3.0230294000 -1.2560905000
@@ -33,7 +36,8 @@ H 0.8610073000 2.8298045000 -1.3104502000
 )
 
 moleculeB_thymine = base64encode(
-"""
+"""15
+
 N 1.2754606000 -0.6478993000 -1.9779104000
 C 1.4130533000 -1.5536850000 -0.9550667000
 H 2.4258769000 -1.8670780000 -0.7468778000
@@ -131,9 +135,9 @@ with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
     fp.write(ie_results.model_dump_json(indent=2))
 
 # Numeric results:
-interaction_energy = 627.5095 * ie_results.results["interaction_energy"]["raw_interaction_energy"]
-cp_corrected_interaction_energy = 627.5095 * ie_results.results["interaction_energy"]["cp_corrected_interaction_energy"]
-basis_set_superposition_error = 627.5095 * ie_results.results["interaction_energy"]["basis_set_superposition_error"]
+interaction_energy = KCAL_PER_MOL_PER_HARTREE * ie_results.results["interaction_energy"]["raw_interaction_energy"]
+cp_corrected_interaction_energy = KCAL_PER_MOL_PER_HARTREE * ie_results.results["interaction_energy"]["cp_corrected_interaction_energy"]
+basis_set_superposition_error = KCAL_PER_MOL_PER_HARTREE * ie_results.results["interaction_energy"]["basis_set_superposition_error"]
 print(f"Interaction Energy:               {interaction_energy}")
 print(f"CP-Corrected Interaction Energy:  {cp_corrected_interaction_energy}")
 print(f"Basis Set Superposition Error:    {basis_set_superposition_error}")
