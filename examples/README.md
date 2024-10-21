@@ -8,3 +8,4 @@
 * [ts_opt_demo](ts_opt_demo) This example takes a transition state structure from the supplemental material of a [paper](https://pubs.acs.org/doi/10.1021/ja4034439) and runs a transition state optimization on it. 
 * [ts_endpoints_demo](ts_endpoint_demo) This example takes reactant and product structures from the same paper as above and runs a TS optimization from endpoints.
 * [reaction_paths](reaction_paths) Example showing a grid search, calculating four reaction paths for solvent-mediated proton transfer. One in the gas phase, one with one explicit water, one with two waters and one with three. The results show that two water molecules most effectively mediate the proton transfer (i.e. have the lowest barrier).
+* [interaction_energy](interaction_energy) Example showing how to run an Interaction Energy workflow via the Promethium API.
