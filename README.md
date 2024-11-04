@@ -60,7 +60,7 @@ This initializes your credentials for use with both the CLI and the
 Python client.
 
 After doing this, in Python you can simply instantiate the Promethium Client
-directly in python using:
+directly in Python using:
 ```
 from promethium_sdk import PromethiumClient
 
@@ -134,7 +134,7 @@ and you will see a response of the form:
 Schemas for all requests/responses are provided in the API documentation.
 Congratulations, you ran your first Promethium workflow using the Command-Line Interface (CLI)!
 
-The remainder of this repository covers many examples of how to use the python SDK.
+The remainder of this repository covers many examples of how to use the Python SDK.
 If this is your first time using the Promethium SDK, we recommend running the
 [Getting Started](examples/Getting_Started) examples.
 
@@ -145,7 +145,7 @@ This repository contains a variety of examples for interacting with Promethium p
 Each example has up to three different versions:
 
 1. Interacting with the Promethium API via the SDK (recommended),
-2. Directly querying the API directly via a python library such as `httpx` or `requests`, and,
+2. Directly querying the API directly via a Python library such as `httpx` or `requests`, and,
 3. Directly querying the API via `cURL`.
 
 Please reach out to [Promethium support](mailto:promethium@qcware.com) with any questions.
