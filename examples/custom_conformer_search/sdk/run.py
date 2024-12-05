@@ -127,7 +127,7 @@ job_params = {
             }
         ],
     },
-    "resources": {"gpu_type": "a100"},
+    "resources": {"gpu_type": gpu_type},
 }
 
 
