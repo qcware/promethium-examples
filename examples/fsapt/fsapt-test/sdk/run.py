@@ -1,4 +1,3 @@
-import json
 import os
 import numpy as np
 
@@ -105,7 +104,7 @@ fsapt_wf = CreateFSAPTCalculationWorkflowRequest(**{
         }
   },
   "resources": {
-    "gpu_type": "a100",
+    "gpu_type": gpu_type,
     "gpu_count": 1
   }
 })
