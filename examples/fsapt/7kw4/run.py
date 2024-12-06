@@ -1,7 +1,11 @@
 import json
 import httpx
 import os
-import numpy as np
+
+try:
+    import numpy as np
+except ImportError:
+    raise ImportError("numpy is not installed, run `pip install numpy`.")
 
 from promethium_sdk.utils import (
     base64encode,
