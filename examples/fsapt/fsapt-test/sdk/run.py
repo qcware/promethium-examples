@@ -1,5 +1,9 @@
 import os
-import numpy as np
+
+try:
+    import numpy as np
+except ImportError:
+    raise ImportError("numpy is not installed, run `pip install numpy`.")
 
 from promethium_sdk.client import PromethiumClient
 try:
