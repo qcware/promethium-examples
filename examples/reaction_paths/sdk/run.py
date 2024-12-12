@@ -98,6 +98,7 @@ for i in range(1, n + 1):
 
     payload = CreateReactionPathOptimizationWorkflowRequest(**job_params)
     workflow = prom.workflows.submit(payload)
+    print(f"Workflow {job_params.get('name')} submitted (id: {workflow.id})")
     workflow_ids.append(workflow.id)
 
 # Wait for all workflows to complete:
@@ -115,4 +116,5 @@ for i, workflow_id in enumerate(workflow_ids):
         fp.write(workflow_results.model_dump_json(indent=2))
 
     # Download:
-    prom.workflows.download(workflow.id)
+    with open(f"{foldername}/{i}_{workflow.name}_results.zip", "wb") as fp:
+        fp.write(prom.workflows.download(workflow.id))

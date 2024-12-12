@@ -178,4 +178,5 @@ print("The optimized geometry:")
 print(f'{molecule_str}')
 
 # Download results:
-prom.workflows.download(go_workflow.id)
+with open(f"{foldername}/{go_workflow.name}_results.zip", "wb") as fp:
+    fp.write(prom.workflows.download(go_workflow.id))
