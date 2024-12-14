@@ -145,4 +145,5 @@ energy = spc_results.results["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
 # Download results:
-prom.workflows.download(spc_workflow.id)
+with open(f"{foldername}/{spc_workflow.name}_results.zip", "wb") as fp:
+    fp.write(prom.workflows.download(spc_workflow.id))

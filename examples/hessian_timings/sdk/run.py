@@ -74,6 +74,7 @@ job_params = {
 prom = PromethiumClient()
 payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
 workflow = prom.workflows.submit(payload)
+print(f"Workflow submitted (id: {workflow.id})")
 
 prom.workflows.wait(workflow.id)
 
@@ -90,4 +91,5 @@ energy = go_results.results["optimization"]["energy"]
 print(energy)
 
 # Download:
-prom.workflows.download(workflow.id)
+with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+    fp.write(prom.workflows.download(workflow.id))

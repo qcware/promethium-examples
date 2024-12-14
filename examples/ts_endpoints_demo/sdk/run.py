@@ -115,6 +115,7 @@ job_params = {
 prom = PromethiumClient()
 payload = CreateTransitionStateOptimizationFromEndpointsWorkflowRequest(**job_params)
 workflow = prom.workflows.submit(payload)
+print(f"Workflow submitted (id: {workflow.id})")
 
 prom.workflows.wait(workflow.id)
 
@@ -131,4 +132,5 @@ optimized_molecule = tsofe_results.get_artifact("optimized-molecule")
 print(optimized_molecule)
 
 # Download:
-prom.workflows.download(workflow.id)
+with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+    fp.write(prom.workflows.download(workflow.id))

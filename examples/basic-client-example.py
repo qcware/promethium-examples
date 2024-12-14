@@ -46,7 +46,8 @@ workflow: Workflow = prom.workflows.get(id=workflow_id)
 workflow_result: WorkflowResult = prom.workflows.results(id=workflow_id)
 
 # Download results of one workflow (as a zip file) to the current directory:
-prom.workflows.download(id=workflow_id)
+with open(f"example-results.zip", "wb") as fp:
+    fp.write(prom.workflows.download(id=workflow_id))
 
 # Submit a workflow:
 config = {
