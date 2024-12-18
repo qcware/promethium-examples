@@ -148,7 +148,7 @@ for vals in zip(*multipole_moments):
     label = vals[0]["component_label"]
     print(f"{label:>7s} |" + " |".join([f"{v['value']:16.8f}" for v in vals]))
 
-# This script will print a table which looks like this:
+# This script will print a table which looks like this (with minor numerical differences):
 """
         |     nordiazepam |      oxprenolol |       aprenolol |   ciprofloxacin |        mannitol
 --------+-----------------+-----------------+-----------------+-----------------+-----------------

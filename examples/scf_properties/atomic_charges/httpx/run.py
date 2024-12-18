@@ -21,7 +21,8 @@ headers = {
 client = httpx.Client(base_url=base_url, headers=headers)
 
 input_mol = base64.b64encode(
-    b"""
+    b"""9
+
     O   -1.510407226976    0.757898746844    0.000000000000
     O   -0.553334234073   -1.306832947272    0.000000000000
     C    0.851836372408    0.670262334922    0.000000000000
@@ -122,7 +123,7 @@ print("------+" + "+".join(["-------------" for k in analysis_methods]))
 for n, vals in enumerate(zip(*analysis_results)):
     print(f"  {n:3d} |" + " |".join([f"{v:12.8f}" for v in vals]))
 
-# This script will print a table which looks like this:
+# This script will print a table which looks like this (with minor numerical differences):
 """
  Atom |    mulliken |      lowdin |         iao |        resp
 ------+-------------+-------------+-------------+-------------

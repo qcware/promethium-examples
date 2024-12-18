@@ -3,6 +3,7 @@ import os
 from promethium_sdk.utils import base64encode
 from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
+    # This requires an SDK version >= 0.3.12 for the SCF properties.
     CreateSinglePointCalculationWorkflowRequest,
 )
 
@@ -12,7 +13,9 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-input_mol = base64encode("""
+input_mol = base64encode(
+    """9
+
     O   -1.510407226976    0.757898746844    0.000000000000
     O   -0.553334234073   -1.306832947272    0.000000000000
     C    0.851836372408    0.670262334922    0.000000000000
@@ -82,7 +85,7 @@ print("------+" + "+".join(["-------------" for k in analysis_methods]))
 for n, vals in enumerate(zip(*analysis_results)):
     print(f"  {n:3d} |" + " |".join([f"{v:12.8f}" for v in vals]))
 
-# This script will print a table which looks like this:
+# This script will print a table which looks like this (with minor numerical differences):
 """
  Atom |    mulliken |      lowdin |         iao |        resp
 ------+-------------+-------------+-------------+-------------
