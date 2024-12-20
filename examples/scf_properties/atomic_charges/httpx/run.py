@@ -80,7 +80,7 @@ if metadata:
 payload = job_params
 jobname = payload["name"]
 response = client.post("/v0/workflows", json=payload)
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print(f"Workflow {jobname} submitted with id: {workflow_id}")
@@ -95,7 +95,7 @@ workflow = wait_for_workflows_to_complete(
 
 # Get the status and Wall-clock time:
 response = client.get(f"v0/workflows/{workflow_id}").json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
@@ -106,12 +106,12 @@ print(f"Workflow completed in {timetaken:.2f}s")
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)
 
 # Extract and print the atomic charges contained in the numeric results:
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 atomic_charges = response["results"]["scf_properties"]["atomic_charges"]
 analysis_methods = [data["analysis_method"] for data in atomic_charges]

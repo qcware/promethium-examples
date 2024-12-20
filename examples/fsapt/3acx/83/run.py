@@ -15,7 +15,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 monomerA = base64encode(
-"""
+"""44
+
 C  48.671 21.557 53.684
 H  47.823 22.241 53.598
 H  48.289 20.572 53.954
@@ -64,7 +65,8 @@ H  54.499 21.450 45.203
 )
 
 monomerB = base64encode(
-"""
+"""39
+
 C  56.282 16.378 57.621
 C  56.834 15.837 56.524
 C  58.279 22.417 53.598
@@ -108,10 +110,10 @@ H  54.103 10.878 53.251
 )
 
 job_params = {
-  "name": "fsapt-test",
-  "version": "v1",
-  "kind": "FSAPTCalculation",
-  "parameters": {
+    "name": "fsapt-test",
+    "version": "v1",
+    "kind": "FSAPTCalculation",
+    "parameters": {
         "molecule_a": {
             "base64data": monomerA,
             "filetype": "xyz",
@@ -146,11 +148,11 @@ job_params = {
                 "g_convergence": 1.0e-6
             }
         }
-  },
-  "resources": {
-    "gpu_type": "a100",
-    "gpu_count": 1
-  }
+    },
+    "resources": {
+        "gpu_type": "a100",
+        "gpu_count": 1
+    }
 }
 
 headers = {
@@ -166,7 +168,7 @@ jobname = payload["name"]
 print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload)
 response.raise_for_status()
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print("done!")
@@ -180,20 +182,20 @@ workflow = wait_for_workflows_to_complete(
 print(f"Workflow completed with status: {workflow['status']}")
 
 response = client.get(f"/v0/workflows/{workflow_id}").json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
 print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)
 
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
@@ -211,4 +213,3 @@ print('')
 print('    Elst     Exch    IndAB    IndBA     Disp    Total')
 print('%8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf' % (Eelst, Eexch, EindAB, EindBA, Edisp, Esapt))
 print('')
-

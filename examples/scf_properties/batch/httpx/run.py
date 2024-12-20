@@ -76,7 +76,7 @@ for file in os.listdir(molecules_dir):
     payload = job_params
     jobname = payload["name"]
     response = client.post("/v0/workflows", json=payload)
-    with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+    with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
         fp.write(json.dumps(response.json()))
     workflow_id = response.json()["id"]
     print(f"Workflow {jobname} submitted with id: {workflow_id}")
@@ -98,7 +98,7 @@ for mol_workflow_id in molecule_workflow_ids.items():
 
     # Get the status and Wall-clock time:
     response = client.get(f"v0/workflows/{workflow_id}").json()
-    with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+    with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
         fp.write(json.dumps(response))
     name = response["name"]
     timetaken = response["duration_seconds"]
@@ -108,12 +108,12 @@ for mol_workflow_id in molecule_workflow_ids.items():
     response = client.get(
         f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
     )
-    with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+    with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
         fp.write(response.content)
 
     # Extract and collect the SCF properties contained in the numeric results:
     response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-    with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
         fp.write(json.dumps(response))
 
     molecule_names.append(mol_name)

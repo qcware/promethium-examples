@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
@@ -10,9 +11,7 @@ from promethium_sdk.utils import (
 
 foldername = "output"
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
-dir_path = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-)
+dir_path = pathlib.Path(__file__).parent.parent.resolve()
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
@@ -23,9 +22,9 @@ workflow_ids = []
 prom = PromethiumClient()
 
 for i in range(1, n + 1):
-    with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:
+    with open(os.path.join(dir_path, str(i), "reactant.xyz"), "r") as fp:
         reactant = base64encode(fp.read())
-    with open(os.path.join(dir_path, f"{i}/product.xyz"), "r") as fp:
+    with open(os.path.join(dir_path, str(i), "product.xyz"), "r") as fp:
         product = base64encode(fp.read())
 
     job_params = {
@@ -112,9 +111,9 @@ for i, workflow_id in enumerate(workflow_ids):
     print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
     workflow_results = prom.workflows.results(workflow.id)
-    with open(f"{foldername}/{i}_{workflow.name}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{i}_{workflow.name}_results.json"), "w") as fp:
         fp.write(workflow_results.model_dump_json(indent=2))
 
     # Download:
-    with open(f"{foldername}/{i}_{workflow.name}_results.zip", "wb") as fp:
+    with open(os.path.join(foldername, f"{i}_{workflow.name}_results.zip"), "wb") as fp:
         fp.write(prom.workflows.download(workflow.id))

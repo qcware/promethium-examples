@@ -13,7 +13,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 mol = base64encode(
-"""
+"""9
+
     O           -1.510407226976     0.757898746844     0.000000000000
     O           -0.553334234073    -1.306832947272     0.000000000000
     C            0.851836372408     0.670262334922     0.000000000000
@@ -83,7 +84,7 @@ print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
 go_results = prom.workflows.results(workflow.id)
-with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{workflow.name}_results.json"), "w") as fp:
     fp.write(go_results.model_dump_json(indent=2))
 
 # Numeric results:
@@ -91,5 +92,5 @@ energy = go_results.results["optimization"]["energy"]
 print(energy)
 
 # Download:
-with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(workflow.id))
