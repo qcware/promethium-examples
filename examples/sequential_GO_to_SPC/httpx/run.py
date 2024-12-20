@@ -17,7 +17,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 mol = base64encode(
-"""
+"""67
+
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -133,7 +134,7 @@ payload = job_params
 jobname = payload["name"]
 print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload, headers=headers)
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print("done!")
@@ -147,14 +148,14 @@ workflow = wait_for_workflows_to_complete(
 print(f"Workflow completed with status: {workflow['status']}")
 
 response = client.get(f"/v0/workflows/{workflow_id}", headers=headers).json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
 print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
 response = client.get(f"/v0/workflows/{workflow_id}/results", headers=headers).json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 energy = response["results"]["optimization"]["energy"]
 mol = response["results"]["artifacts"]["optimized-molecule"]["base64data"]
@@ -164,7 +165,7 @@ print(base64decode(mol))
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)
 
 job_params = {
@@ -205,7 +206,7 @@ payload = job_params
 jobname = payload["name"]
 print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload)
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print("done!")
@@ -219,14 +220,14 @@ workflow = wait_for_workflows_to_complete(
 print(f"Workflow completed with status: {workflow['status']}")
 
 response = client.get(f"v0/workflows/{workflow_id}").json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
 print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 energy = response["results"]["rhf"]["energy"]
 print(energy)
@@ -234,5 +235,5 @@ print(energy)
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)

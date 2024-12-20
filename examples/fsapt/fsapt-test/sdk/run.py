@@ -26,7 +26,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 monomerA = base64encode(
-"""
+"""11
+
  C   -3.794947367454    0.447388712628    1.782117979176
  H   -3.116947367454    0.417388712628    0.936117979176
  C   -3.079947367454   -0.189611287372    2.980117979176
@@ -42,7 +43,8 @@ monomerA = base64encode(
 )
 
 monomerB = base64encode(
-"""
+"""18
+
  C    1.557052632546   -0.992611287372   -2.697882020824
  O    1.911052632546   -1.970611287372   -2.060882020824
  N    1.133052632546    0.132388712628   -2.093882020824
@@ -66,10 +68,10 @@ monomerB = base64encode(
 
 wf_name = "fsapt-test"
 fsapt_wf = CreateFSAPTCalculationWorkflowRequest(**{
-  "name": wf_name,
-  "version": "v1",
-  "kind": "FSAPTCalculation",
-  "parameters": {
+    "name": wf_name,
+    "version": "v1",
+    "kind": "FSAPTCalculation",
+    "parameters": {
         "molecule_a": {
             "base64data": monomerA,
             "filetype": "xyz",
@@ -106,21 +108,21 @@ fsapt_wf = CreateFSAPTCalculationWorkflowRequest(**{
                 "g_convergence": 1.0e-6
             }
         }
-  },
-  "resources": {
-    "gpu_type": gpu_type,
-    "gpu_count": 1
-  }
+    },
+    "resources": {
+        "gpu_type": gpu_type,
+        "gpu_count": 1
+    }
 })
 
 prom = PromethiumClient()
 workflow = prom.workflows.submit(fsapt_wf)
+print(f"Workflow {workflow.name} submitted with id: {workflow.id}")
 prom.workflows.wait(workflow.id)
 
 workflow = prom.workflows.get(workflow.id)
 print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
-
 
 response = prom.workflows.results(workflow.id).model_dump()
 labels_a = response['results']['fsapt']['fragment_labels']['molecule_a']
@@ -148,4 +150,3 @@ for i in range(len(labels_b)):
     print('%-9s %-9s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf' % ('All', labels_b[i], np.sum(Eelst, axis=0)[i], np.sum(Eexch, axis=0)[i], np.sum(EindAB, axis=0)[i], np.sum(EindBA, axis=0)[i], np.sum(Edisp, axis=0)[i], np.sum(Esapt, axis=0)[i]))
 
 print('%-9s %-9s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf' % ('All', 'All', np.sum(Eelst), np.sum(Eexch), np.sum(EindAB), np.sum(EindBA), np.sum(Edisp), np.sum(Esapt)))
-

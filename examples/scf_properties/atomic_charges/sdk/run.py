@@ -67,11 +67,11 @@ print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status
 print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
 
 spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.json"), "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
 # Download results:
-with open(f"{foldername}/{spc_workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(spc_workflow.id))
 
 # Extract and print the atomic charges contained in the numeric results:
