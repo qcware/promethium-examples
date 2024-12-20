@@ -20,7 +20,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 monomerA = base64encode(
-"""
+"""11
+
  C   -3.794947367454    0.447388712628    1.782117979176
  H   -3.116947367454    0.417388712628    0.936117979176
  C   -3.079947367454   -0.189611287372    2.980117979176
@@ -36,7 +37,8 @@ monomerA = base64encode(
 )
 
 monomerB = base64encode(
-"""
+"""18
+
  C    1.557052632546   -0.992611287372   -2.697882020824
  O    1.911052632546   -1.970611287372   -2.060882020824
  N    1.133052632546    0.132388712628   -2.093882020824
@@ -59,10 +61,10 @@ monomerB = base64encode(
 )
 
 job_params = {
-  "name": "fsapt-test",
-  "version": "v1",
-  "kind": "FSAPTCalculation",
-  "parameters": {
+    "name": "fsapt-test",
+    "version": "v1",
+    "kind": "FSAPTCalculation",
+    "parameters": {
         "molecule_a": {
             "base64data": monomerA,
             "filetype": "xyz",
@@ -99,11 +101,11 @@ job_params = {
                 "g_convergence": 1.0e-6
             }
         }
-  },
-  "resources": {
-    "gpu_type": gpu_type,
-    "gpu_count": 1
-  }
+    },
+    "resources": {
+        "gpu_type": gpu_type,
+        "gpu_count": 1
+    }
 }
 
 headers = {
@@ -119,7 +121,7 @@ jobname = payload["name"]
 print(f"Submitting {jobname}...", end="")
 response = client.post("/v0/workflows", json=payload)
 response.raise_for_status()
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print("done!")
@@ -133,20 +135,20 @@ workflow = wait_for_workflows_to_complete(
 print(f"Workflow completed with status: {workflow['status']}")
 
 response = client.get(f"/v0/workflows/{workflow_id}").json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
 print(f"Name: {name}, time taken: {timetaken:.2f}s")
 
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)
 
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
@@ -176,4 +178,3 @@ for i in range(len(labels_b)):
     print('%-9s %-9s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf' % ('All', labels_b[i], np.sum(Eelst, axis=0)[i], np.sum(Eexch, axis=0)[i], np.sum(EindAB, axis=0)[i], np.sum(EindBA, axis=0)[i], np.sum(Edisp, axis=0)[i], np.sum(Esapt, axis=0)[i]))
 
 print('%-9s %-9s %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf %8.3lf' % ('All', 'All', np.sum(Eelst), np.sum(Eexch), np.sum(EindAB), np.sum(EindBA), np.sum(Edisp), np.sum(Esapt)))
-

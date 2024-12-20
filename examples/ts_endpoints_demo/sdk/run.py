@@ -13,7 +13,8 @@ if not os.path.exists(foldername):
     os.makedirs(foldername)
 
 reactant = base64encode(
-"""
+"""12
+
  C 0.797293840 1.081303780 -0.164555970
  C -0.547182890 0.998873790 0.574238880
  H -0.395761920 0.541241890 1.549831680
@@ -30,7 +31,8 @@ reactant = base64encode(
 )
 
 product = base64encode(
-"""
+"""12
+
  C -1.480477590 0.370142220 -0.164123070
  C -0.251557300 1.224758920 0.164042060
  H 0.085104930 1.819910830 -0.680028190
@@ -124,7 +126,7 @@ print(f"Workflow {workflow.name} completed with status: {workflow.status}")
 print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
 tsofe_results = prom.workflows.results(workflow.id)
-with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{workflow.name}_results.json"), "w") as fp:
     fp.write(tsofe_results.model_dump_json(indent=2))
 
 # Optimized molecule:
@@ -132,5 +134,5 @@ optimized_molecule = tsofe_results.get_artifact("optimized-molecule")
 print(optimized_molecule)
 
 # Download:
-with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(workflow.id))

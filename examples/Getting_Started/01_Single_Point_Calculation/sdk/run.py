@@ -23,7 +23,8 @@ if not os.path.exists(foldername):
 
 # Specify the input xyz file contents and prepare (base64encode) for API submission
 # Molecule is Nirmatrelvir
-input_mol = base64encode("""
+input_mol = base64encode("""67
+
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -137,7 +138,7 @@ print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
 
 # Obtain the numeric results:
 spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.json"), "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
 # Extract and print the energy contained in the numeric results:
@@ -145,5 +146,5 @@ energy = spc_results.results["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
 # Download results:
-with open(f"{foldername}/{spc_workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(spc_workflow.id))

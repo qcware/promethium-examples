@@ -169,7 +169,7 @@ for workflow_id in workflow_ids:
     print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
     cs_results = prom.workflows.results(workflow_id)
-    with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{workflow.name}_results.json"), "w") as fp:
         fp.write(cs_results.model_dump_json(indent=2))
 
     # Get conformers:

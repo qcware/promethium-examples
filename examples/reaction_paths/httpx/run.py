@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 
 import httpx
 from promethium_sdk.utils import (
@@ -10,9 +11,7 @@ from promethium_sdk.utils import (
 foldername = "output"
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
-dir_path = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-)
+dir_path = pathlib.Path(__file__).parent.parent.resolve()
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
@@ -29,9 +28,9 @@ n = 4
 workflow_ids = []
 
 for i in range(1, n + 1):
-    with open(os.path.join(dir_path, f"{i}/reactant.xyz"), "r") as fp:
+    with open(os.path.join(dir_path, str(i), "reactant.xyz"), "r") as fp:
         reactant = base64encode(bytes(fp.read(), "utf-8"))
-    with open(os.path.join(dir_path, f"{i}/product.xyz"), "r") as fp:
+    with open(os.path.join(dir_path, str(i), "product.xyz"), "r") as fp:
         product = base64encode(bytes(fp.read(), "utf-8"))
 
     job_params = {
@@ -122,18 +121,18 @@ print(f"Workflow completed with statuses: {workflows}")
 
 for i, workflow_id in enumerate(workflow_ids):
     response = client.get(f"/v0/workflows/{workflow_id}").json()
-    with open(f"{foldername}/{i}_status.json", "w") as fp:
+    with open(os.path.join(foldername, f"{i}_status.json"), "w") as fp:
         fp.write(json.dumps(response))
     name = response["name"]
     timetaken = response["duration_seconds"]
     print(f"Experiment: {i}, Name: {name}, time taken: {timetaken:.2f}s")
 
     response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-    with open(f"{foldername}/{i}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{i}_results.json"), "w") as fp:
         fp.write(json.dumps(response))
 
     response = client.get(
         f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
     )
-    with open(f"{foldername}/{i}_results.zip", "wb") as fp:
+    with open(os.path.join(foldername, f"{i}_results.zip"), "wb") as fp:
         fp.write(response.content)

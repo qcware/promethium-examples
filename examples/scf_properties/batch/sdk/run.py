@@ -71,13 +71,13 @@ for mol_workflow_id in molecule_workflow_ids.items():
     print(f"Workflow {workflow.name} completed with status {workflow.status} in {workflow.duration_seconds:.2f}s")
 
     workflow_results = prom.workflows.results(workflow.id)
-    with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{workflow.name}_results.json"), "w") as fp:
         fp.write(workflow_results.model_dump_json(indent=2))
 
     molecule_names.append(mol_name)
     molecule_scf_properties.append(workflow_results.results["scf_properties"])
 
-    with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+    with open(os.path.join(foldername, f"{workflow.name}_results.zip"), "wb") as fp:
         fp.write(prom.workflows.download(workflow.id))
 
 # Print a table of the SCF properties for each molecule.

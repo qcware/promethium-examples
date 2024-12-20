@@ -13,7 +13,8 @@ gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-mol = base64encode("""
+mol = base64encode("""67
+
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -120,7 +121,9 @@ job_params = {
 
 prom = PromethiumClient()
 go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
+print(f"Submitting {go_name}...", end="")
 go_workflow = prom.workflows.submit(go_payload)
+print("done!")
 
 prom.workflows.wait(go_workflow.id)
 
@@ -129,7 +132,7 @@ print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}"
 print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
 
 go_results = prom.workflows.results(go_workflow.id)
-with open(f"{foldername}/{go_workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{go_workflow.name}_results.json"), "w") as fp:
     fp.write(go_results.model_dump_json(indent=2))
 
 # Numeric results:
@@ -183,6 +186,7 @@ job_params = {
 spc_payload = CreateSinglePointCalculationWorkflowRequest(**job_params)
 print(f"Submitting {spc_name}...", end="")
 spc_workflow = prom.workflows.submit(spc_payload)
+print("done!")
 
 prom.workflows.wait(spc_workflow.id)
 
@@ -191,7 +195,7 @@ print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status
 print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
 
 spc_results = prom.workflows.results(spc_workflow.id)
-with open(f"{foldername}/{spc_workflow.name}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.json"), "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
 # Numeric results:
@@ -199,5 +203,5 @@ energy = spc_results.results["rhf"]["energy"]
 print(energy)
 
 # Download:
-with open(f"{foldername}/{spc_workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{spc_workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(spc_results.id))

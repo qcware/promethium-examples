@@ -143,5 +143,5 @@ print(f"CP-Corrected Interaction Energy:  {cp_corrected_interaction_energy}")
 print(f"Basis Set Superposition Error:    {basis_set_superposition_error}")
 
 # Download:
-with open(f"{foldername}/{workflow.name}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(workflow.id))

@@ -69,7 +69,7 @@ print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}"
 print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
 
 go_results = prom.workflows.results(go_workflow.id)
-with open(f"{OUTPUT_FOLDER}/{go_workflow.name}_results.json", "w") as fp:
+with open(os.path.join(OUTPUT_FOLDER, f"{go_workflow.name}_results.json"), "w") as fp:
     fp.write(go_results.model_dump_json(indent=2))
 
 # Numeric results:
@@ -80,12 +80,13 @@ molecule_str = go_results.get_artifact("optimized-molecule")
 # Download to ZIP, save to file, and extract the contents.
 
 # Write the ZIP file to disk:
-with open(f"{OUTPUT_FOLDER}/example-results.zip", "wb") as fp:
+zipfile_path = os.path.join(OUTPUT_FOLDER, "example-results.zip")
+with open(zipfile_path, "wb") as fp:
     fp.write(prom.workflows.download(go_workflow.id))
 
 # Unzip the downloaded file to a folder:
 unzip_folder = os.path.join(OUTPUT_FOLDER, go_workflow.name)
-with zipfile.ZipFile(f"{OUTPUT_FOLDER}/example-results.zip", "r") as zip_ref:
+with zipfile.ZipFile(zipfile_path, "r") as zip_ref:
     # Extract the contents to a folder, and write all individual files to disk:
     zip_ref.extractall(unzip_folder)
     # List all of the files in the archive:

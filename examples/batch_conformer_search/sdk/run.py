@@ -95,11 +95,9 @@ prom = PromethiumClient()
 
 SMILES = [
     "C1=CN=C(C=N1)C(=O)N",
-    "CC(=O)NC1=C(C(=C(C(=C1I)C(=O)O)I)NC(=O)C)I",
     "CC(=O)OC1=CC=CC=C1C(=O)O",
     "CCC(=C)C(=O)C1=C(C(=C(C=C1)OCC(=O)O)Cl)Cl",
     "CN1C(=O)CN=C(C2=C1C=CC(=C2)[N+](=O)[O-])C3=CC=CC=C3F",
-    "C(C(F)(F)F)(Cl)Br",
     "CCCC(C)(COC(=O)N)COC(=O)N",
     "CCCC(C)C1(C(=O)NC(=O)NC1=O)CC",
     "CCCC(C)C1(C(=O)NC(=O)NC1=O)CC=C",
@@ -140,7 +138,7 @@ for workflow_id in workflow_ids:
     print(f"Workflow completed in {workflow.duration_seconds:.2f}s")
 
     cs_results = prom.workflows.results(workflow_id)
-    with open(f"{foldername}/{workflow.name}_results.json", "w") as fp:
+    with open(os.path.join(foldername, f"{workflow.name}_results.json"), "w") as fp:
         fp.write(cs_results.model_dump_json(indent=2))
 
     # Get conformers:

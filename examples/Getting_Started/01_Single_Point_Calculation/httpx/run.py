@@ -34,7 +34,8 @@ client = httpx.Client(base_url=base_url, headers=headers)
 # Specify the input xyz file contents and prepare (base64encode) for API submission
 # Molecule is Nirmatrelvir
 input_mol = base64.b64encode(
-    b"""
+    b"""67
+
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
     F        -3.79613        0.10770        1.11447
@@ -151,7 +152,7 @@ if metadata:
 payload = job_params
 jobname = payload["name"]
 response = client.post("/v0/workflows", json=payload)
-with open(f"{foldername}/{jobname}_submitted.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
     fp.write(json.dumps(response.json()))
 workflow_id = response.json()["id"]
 print(f"Workflow {jobname} submitted with id: {workflow_id}")
@@ -166,7 +167,7 @@ workflow = wait_for_workflows_to_complete(
 
 # Get the status and Wall-clock time:
 response = client.get(f"v0/workflows/{workflow_id}").json()
-with open(f"{foldername}/{jobname}_status.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
 name = response["name"]
 timetaken = response["duration_seconds"]
@@ -175,7 +176,7 @@ print(f"Workflow completed in {timetaken:.2f}s")
 
 # Extract and print the energy contained in the numeric results:
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
-with open(f"{foldername}/{jobname}_results.json", "w") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
 energy = response["results"]["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
@@ -184,5 +185,5 @@ print(f"Energy (Hartrees) = {energy}")
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )
-with open(f"{foldername}/{jobname}_results.zip", "wb") as fp:
+with open(os.path.join(foldername, f"{jobname}_results.zip"), "wb") as fp:
     fp.write(response.content)
