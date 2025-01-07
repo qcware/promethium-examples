@@ -142,7 +142,7 @@ workflow_ids = []
 for i, smile in enumerate(SMILES):
     tmp_job_params = copy.deepcopy(job_params)
     # Set the molecule:
-    tmp_job_params["name"] = f"conformer-search-GS-{i}-Custom-A100"
+    tmp_job_params["name"] = f"conformer-search-GS-{i}-Custom-{gpu_type}"
     tmp_job_params["parameters"]["molecule"] = {
         "base64data": base64encode(smile),
         "filetype": "smi",
