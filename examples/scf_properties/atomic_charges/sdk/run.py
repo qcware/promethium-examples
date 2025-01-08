@@ -76,13 +76,13 @@ with open(os.path.join(foldername, f"{spc_workflow.name}_results.zip"), "wb") as
 
 # Extract and print the atomic charges contained in the numeric results:
 atomic_charges = spc_results.results["scf_properties"]["atomic_charges"]
-analysis_methods = [data["analysis_method"] for data in atomic_charges]
-analysis_results = [data["atomic_charges"] for data in atomic_charges]
+atomic_charge_analysis_methods = [data["analysis_method"] for data in atomic_charges]
+atomic_charge_analysis_results = [data["atomic_charges"] for data in atomic_charges]
 
 print()
-print(" Atom |" + " |".join([f"{k:>12s}" for k in analysis_methods]))
-print("------+" + "+".join(["-------------" for k in analysis_methods]))
-for n, vals in enumerate(zip(*analysis_results)):
+print(" Atom |" + " |".join([f"{k:>12s}" for k in atomic_charge_analysis_methods]))
+print("------+" + "+".join(["-------------" for k in atomic_charge_analysis_methods]))
+for n, vals in enumerate(zip(*atomic_charge_analysis_results)):
     print(f"  {n:3d} |" + " |".join([f"{v:12.8f}" for v in vals]))
 
 # This script will print a table which looks like this (with minor numerical differences):
@@ -98,4 +98,48 @@ for n, vals in enumerate(zip(*analysis_results)):
     6 |  0.10109182 |  0.04459825 |  0.15936747 |  0.20354619
     7 |  0.08306289 |  0.03691336 |  0.14638526 |  0.19056022
     8 |  0.22783968 |  0.11632762 |  0.37606249 |  0.44444211
+"""
+
+# For each analysis method, extract the bond orders as a dictionary of atom-pair to value, then print:
+all_atom_pairs = set()
+bond_order_analysis_methods = []
+bond_order_analysis_results = []
+for data in atomic_charges:
+    if "bond_orders" not in data.keys():
+        continue
+    bond_orders_dict = {}
+    for bond_order in data["bond_orders"]:
+        atom_pair = f"{bond_order['atom_index_1']}-{bond_order['atom_index_2']}"
+        bond_orders_dict[atom_pair] = bond_order["bond_order"]
+    bond_order_analysis_methods.append(data["analysis_method"])
+    bond_order_analysis_results.append(bond_orders_dict)
+    all_atom_pairs.update(bond_orders_dict.keys())
+
+print()
+print(" Atom Pair |" + " |".join([f"{k:>12s}" for k in bond_order_analysis_methods]))
+print("-----------+" + "+".join(["-------------" for k in bond_order_analysis_methods]))
+for atom_pair in sorted(all_atom_pairs):
+    vals = [results_dict.get(atom_pair, None) for results_dict in bond_order_analysis_results]
+    print(f"  {atom_pair:>8s} |" + " |".join([f"{v:12.8f}" if v else "         n/a" for v in vals]))
+
+# This script will print a table which looks like this (with minor numerical differences):
+"""
+ Atom Pair |    mulliken |      lowdin |         iao
+-----------+-------------+-------------+-------------
+       0-3 |  1.10807535 |  1.30713248 |  1.04301373
+       0-8 |  0.94120572 |  1.07689118 |  0.83399933
+       1-3 |  1.98675574 |  2.18700234 |  1.74322101
+       2-3 |  0.98348079 |  1.06766134 |  1.00427294
+       2-4 |  1.94482375 |  1.96587240 |  1.93232799
+       2-5 |  0.97117201 |  0.93897566 |  0.94913670
+       3-0 |  1.10807535 |  1.30713248 |  1.04301373
+       3-1 |  1.98675574 |  2.18700234 |  1.74322101
+       3-2 |  0.98348079 |  1.06766134 |  1.00427294
+       4-2 |  1.94482375 |  1.96587240 |  1.93232799
+       4-6 |  0.96456055 |  0.95583015 |  0.95177423
+       4-7 |  0.97388370 |  0.96123140 |  0.96127085
+       5-2 |  0.97117201 |  0.93897566 |  0.94913670
+       6-4 |  0.96456055 |  0.95583015 |  0.95177423
+       7-4 |  0.97388370 |  0.96123140 |  0.96127085
+       8-0 |  0.94120572 |  1.07689118 |  0.83399933
 """
