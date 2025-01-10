@@ -101,7 +101,6 @@ SMILES = [
     "CCCC(C)(COC(=O)N)COC(=O)N",
     "CCCC(C)C1(C(=O)NC(=O)NC1=O)CC",
     "CCCC(C)C1(C(=O)NC(=O)NC1=O)CC=C",
-    "C[N+](C)(C)CCOC(=O)CCC(=O)OCC[N+](C)(C)C",
 ]
 
 workflow_ids = []
