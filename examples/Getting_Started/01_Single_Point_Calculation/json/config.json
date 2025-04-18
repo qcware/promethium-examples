@@ -16,7 +16,11 @@
             }
         },
         "hf": {
-            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "params": {
+                "charge": 0, 
+                "multiplicity": 1, 
+                "g_convergence": 0.000001
+            },
             "outputs": {
                 "gradient": false,
                 "polarizability": false,
