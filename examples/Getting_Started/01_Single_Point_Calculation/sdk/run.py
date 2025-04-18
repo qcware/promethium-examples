@@ -6,24 +6,28 @@ from promethium_sdk.models import (
     CreateSinglePointCalculationWorkflowRequest,
 )
 
-# This example expects that your API Credentials have been configured and
-# stored in a .promethium.ini file
-# If that hasn't been completed, for instructions see:
+# This example expects that your API credentials have been configured and
+# stored in a .promethium.ini file.
+# If that hasn't been completed, see the following instructions:
 # https://github.com/qcware/promethium-examples/tree/main#configuring-your-api-credentials
 
-# Est. Runtimes:
-# Wall-clock / real-world & billable compute time:
-# Nirmatrelvir = <1 min
+# Estimated runtimes:
+#   Nirmatrelvir
+#     - Compute time: <1 min
+#     - Elapsed time: <1 min
 
-foldername = "output"
+# Specify GPU resource type
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
+# Specify output folder
+foldername = "output"
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-# Specify the input xyz file contents and prepare (base64encode) for API submission
-# Molecule is Nirmatrelvir
-input_mol = base64encode("""67
+# Specify the input file contents and prepare (base64encode) for API submission
+# Molecule: Nirmatrelvir
+input_mol = base64encode(
+    """67
 
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
@@ -94,14 +98,17 @@ input_mol = base64encode("""67
     O         3.42325       -5.20351       -2.69779"""
 )
 
-# SPC (Single Point Calculation) Workflow Configuration
-spc_name = "nirmatrelvir_api_spc"
+# SPC (Single Point Calculation) workflow configuration
+workflow_name = "nirmatrelvir_api_spc"
 job_params = {
-    "name": spc_name,
+    "name": workflow_name,
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {"base64data": input_mol, "filetype": "xyz"},
+        "molecule": {
+            "base64data": input_mol, 
+            "filetype": "xyz"
+        },
         "system": {
             "params": {
                 "basisname": "def2-tzvp",
@@ -111,7 +118,11 @@ job_params = {
             }
         },
         "hf": {
-            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "params": {
+                "charge": 0, 
+                "multiplicity": 1, 
+                "g_convergence": 0.000001
+            },
             "outputs": {
                 "gradient": False,
                 "polarizability": False,
@@ -122,7 +133,7 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-# add metadata only if environment variables exist
+# Add metadata only if environment variables exist
 metadata = {}
 workflow_timeout = os.getenv("PM_WORKFLOW_TIMEOUT")
 task_timeout = os.getenv("PM_TASK_TIMEOUT")
@@ -144,20 +155,20 @@ print(f"Workflow {spc_workflow.name} submitted with id: {spc_workflow.id}")
 # Wait for the workflow to finish
 prom.workflows.wait(spc_workflow.id)
 
-# Get the status and Wall-clock time:
+# Get the status and elapsed time
 spc_workflow = prom.workflows.get(spc_workflow.id)
 print(f"Workflow {spc_workflow.name} completed with status: {spc_workflow.status}")
 print(f"Workflow completed in {spc_workflow.duration_seconds:.2f}s")
 
-# Obtain the numeric results:
+# Obtain the numeric results
 spc_results = prom.workflows.results(spc_workflow.id)
 with open(os.path.join(foldername, f"{spc_workflow.name}_results.json"), "w") as fp:
     fp.write(spc_results.model_dump_json(indent=2))
 
-# Extract and print the energy contained in the numeric results:
+# Extract and print the energy contained in the numeric results
 energy = spc_results.results["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
-# Download results:
+# Download results
 with open(os.path.join(foldername, f"{spc_workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(spc_workflow.id))
