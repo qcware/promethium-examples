@@ -6,24 +6,28 @@ from promethium_sdk.models import (
     CreateGeometryOptimizationWorkflowRequest,
 )
 
-# This example expects that your API Credentials have been configured and
-# stored in a .promethium.ini file
-# If that hasn't been completed, for instructions see:
+# This example expects that your API credentials have been configured and
+# stored in a .promethium.ini file.
+# If that hasn't been completed, see the following instructions:
 # https://github.com/qcware/promethium-examples/tree/main#configuring-your-api-credentials
 
-# Est. Runtimes:
-# Wall-clock / real-world & billable compute time:
-# Nirmatrelvir = <10 min
+# Estimated runtimes:
+#   Nirmatrelvir
+#     - Compute time: <10 min
+#     - Elapsed time: <10 min
 
-foldername = "output"
+# Specify GPU resource type
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
+# Specify output folder
+foldername = "output"
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-# Specify the input xyz file contents and prepare (base64encode) for API submission
-# Molecule is Nirmatrelvir
-input_mol = base64encode("""67
+# Specify the input file contents and prepare (base64encode) for API submission
+# Molecule: Nirmatrelvir
+input_mol = base64encode(
+    """67
 
     C        -3.61325       -0.84160        0.14457
     C        -2.25688       -0.64376       -0.57620
@@ -94,14 +98,17 @@ input_mol = base64encode("""67
     O         3.42325       -5.20351       -2.69779"""
 )
 
-# GO (Geometry Optimization) Workflow Configuration
+# GO (Geometry Optimization) workflow configuration
 workflow_name = "nirmatrelvir_api_go"
 job_params = {
     "name": workflow_name,
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
-        "molecule": {"base64data": input_mol, "filetype": "xyz"},
+        "molecule": {
+            "base64data": input_mol, 
+            "filetype": "xyz"
+        },
         "system": {
             "params": {
                 "basisname": "def2-svp",
@@ -141,7 +148,7 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-# add metadata only if environment variables exist
+# Add metadata only if environment variables exist
 metadata = {}
 workflow_timeout = os.getenv("PM_WORKFLOW_TIMEOUT")
 task_timeout = os.getenv("PM_TASK_TIMEOUT")
@@ -154,11 +161,11 @@ if metadata:
     job_params["metadata"] = metadata
 
 
-# Instantiate the Promethium client and submit a GO workflow using the above configuration
+# Instantiate the Promethium client and workflow parameters
 prom = PromethiumClient()
 go_payload = CreateGeometryOptimizationWorkflowRequest(**job_params)
 
-# See how much GPU memory the workflow will use:
+# Estimate required GPU memory for workflow
 go_memory = prom.workflows.memory(go_payload)
 print(f"Estimated GPU memory usage: {go_memory.prediction_bytes/BYTES_PER_GB} GB")
 print(
@@ -166,31 +173,32 @@ print(
     f"({go_memory.percentile_prediction_bytes['0.025']/BYTES_PER_GB}, "
     f"{go_memory.percentile_prediction_bytes['0.975']/BYTES_PER_GB}) GB")
 
+# Submit a GO workflow using the above configuration
 go_workflow = prom.workflows.submit(go_payload)
 print(f"Workflow {go_workflow.name} submitted with id: {go_workflow.id}")
 
 # Wait for the workflow to finish
 prom.workflows.wait(go_workflow.id)
 
-# Get the status and Wall-clock time:
+# Get the status and elapsed time
 go_workflow = prom.workflows.get(go_workflow.id)
 print(f"Workflow {go_workflow.name} completed with status: {go_workflow.status}")
 print(f"Workflow completed in {go_workflow.duration_seconds:.2f}s")
 
-# Obtain the numeric results:
+# Obtain the numeric results
 go_results = prom.workflows.results(go_workflow.id)
 with open(os.path.join(foldername, f"{go_workflow.name}_results.json"), "w") as fp:
     fp.write(go_results.model_dump_json(indent=2))
 
-# Extract and print the energy contained in the numeric results:
+# Extract and print the energy of the optimized geometry contained in the numeric results
 energy = go_results.results["optimization"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
-# Extract and print the optimized geometry contained in the numeric results:
+# Extract and print the optimized geometry contained in the numeric results
 molecule_str = go_results.get_artifact("optimized-molecule")
-print("The optimized geometry:")
+print("Optimized geometry:")
 print(f'{molecule_str}')
 
-# Download results:
+# Download results
 with open(os.path.join(foldername, f"{go_workflow.name}_results.zip"), "wb") as fp:
     fp.write(prom.workflows.download(go_workflow.id))
