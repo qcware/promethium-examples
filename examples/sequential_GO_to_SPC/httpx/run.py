@@ -191,13 +191,6 @@ job_params = {
                 "print_level": 0,
             },
         },
-        "pes": {
-            "params": {"coordinate_system_name": "redundant"},
-        },
-        "optimization": {
-            "params": {"maxiter": 200, "g_convergence": 1.0e-4},
-            "outputs": {"gradient": False, "vibrational_frequencies": False},
-        },
     },
     "resources": {"gpu_type": gpu_type},
 }
