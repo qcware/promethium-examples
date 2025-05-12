@@ -1,6 +1,6 @@
 import os
 
-from promethium_sdk.utils import base64encode, BYTES_PER_GB
+from promethium_sdk.utils import base64encode
 from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
     # This requires an SDK version >= 0.4.1 for the initial_guess_rotation parameter.
