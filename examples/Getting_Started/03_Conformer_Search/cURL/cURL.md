@@ -1,0 +1,106 @@
+# Instructions
+Replace the PM_API_KEY variable with your API key and submit the following command in your terminal:
+
+```
+curl --location 'https://api.promethium.qcware.com/v0/workflows' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'X-API-Key: PM_API_KEY' \
+--data '{
+    "name": "nemorexant_api_cs",
+    "version": "v1",
+    "kind": "ConformerSearch",
+    "parameters": {
+        "molecule": {
+            "filetype": "smi",
+            "base64data": "Q0MxPUMoQz1DQzI9QzFOPUMoTjIpQzMoQ0NDTjNDKD1PKUM0PUMoQz1DQyg9QzQpT0MpTjVOPUNDPU41KUMpQ2w="
+        },
+        "params": {
+            "charge": 0,
+            "multiplicity": 1,
+            "confgen_max_n_conformers": 1000,
+            "confgen_rmsd_threshold": 0.3
+        },
+        "filters": [
+            {
+                "params": {
+                    "rmsd_threshold": 0.3,
+                    "forcefield_type": "MMFF",
+                    "energy_threshold": 15,
+                    "max_n_conformers": 150,
+                    "do_geometry_optimization": true,
+                    "coulomb_distance_threshold": 0.005
+                },
+                "filtertype": "ForceField"
+            },
+            {
+                "params": {
+                    "method": "ANI-2x",
+                    "energy_threshold": 10,
+                    "max_n_conformers": 25,
+                    "distance_threshold": 0.005,
+                    "do_geometry_optimization": true
+                },
+                "filtertype": "ANI"
+            },
+            {
+                "hf": {
+                    "params": {
+                        "g_convergence": 0.000001
+                    }
+                },
+                "params": {
+                    "maxiter": 15,
+                    "g_convergence": 0.001,
+                    "energy_threshold": 5,
+                    "distance_threshold": 0.005,
+                    "do_geometry_optimization": true
+                },
+                "system": {
+                    "params": {
+                        "basisname": "def2-svp",
+                        "methodname": "b3lyp-d3",
+                        "pcm_epsilon": 80.4,
+                        "xc_grid_scheme": "SG1",
+                        "jkfit_basisname": "def2-universal-jkfit",
+                        "pcm_spherical_npoint": 110
+                    }
+                },
+                "filtertype": "DFT",
+                "jk_builder": {
+                    "type": "core_dfjk",
+                    "params": {}
+                }
+            },
+            {
+                "hf": {
+                    "params": {
+                        "g_convergence": 0.000001
+                    }
+                },
+                "params": {
+                    "energy_threshold": 4,
+                    "distance_threshold": 0.005,
+                    "do_geometry_optimization": false
+                },
+                "system": {
+                    "params": {
+                        "basisname": "def2-tzvp",
+                        "methodname": "wb97m-v",
+                        "pcm_epsilon": 80.4,
+                        "xc_grid_scheme": "SG1",
+                        "jkfit_basisname": "def2-universal-jkfit",
+                        "pcm_spherical_npoint": 110
+                    }
+                },
+                "filtertype": "DFT",
+                "jk_builder": {
+                    "type": "core_dfjk",
+                    "params": {}
+                }
+            }
+        ]
+    },
+    "resources": {"gpu_type": "a100"}
+}'
+```

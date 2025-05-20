@@ -5,20 +5,23 @@ import os
 
 from promethium_sdk.utils import wait_for_workflows_to_complete
 
-# This example expects that your API Credentials have been stored as
-# an environment variable.
+# This example expects that your API credentials have been configured and
+# stored as an environment variable.
 #
 # If you do not have the SDK installed, remove or comment out the references
 # to the `wait_for_workflows_to_complete` function.
 
-# Est. Runtimes:
-# Wall-clock / real-world & billable compute time:
-# Nirmatrelvir = <1 min
+# Estimated runtimes:
+#   Nirmatrelvir
+#     - Compute time: <1 min
+#     - Elapsed time: <1 min
 
-foldername = "output"
+# Specify API base URL and GPU resource type
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")
 
+# Specify output folder
+foldername = "output"
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
@@ -29,10 +32,11 @@ headers = {
     "content-type": "application/json",
 }
 
+# Instantiate the HTTPX client
 client = httpx.Client(base_url=base_url, headers=headers)
 
-# Specify the input xyz file contents and prepare (base64encode) for API submission
-# Molecule is Nirmatrelvir
+# Specify the input file contents and prepare (base64encode) for API submission
+# Molecule: Nirmatrelvir
 input_mol = base64.b64encode(
     b"""67
 
@@ -107,14 +111,17 @@ input_mol = base64.b64encode(
 
 input_mol = input_mol.decode("utf-8")
 
-# SPC (Single Point Calculation) Workflow Configuration
-spc_name = "nirmatrelvir_api_spc"
+# SPC (Single Point Calculation) workflow configuration
+workflow_name = "nirmatrelvir_api_spc"
 job_params = {
-    "name": spc_name,
+    "name": workflow_name,
     "version": "v1",
     "kind": "SinglePointCalculation",
     "parameters": {
-        "molecule": {"base64data": input_mol, "filetype": "xyz"},
+        "molecule": {
+            "base64data": input_mol, 
+            "filetype": "xyz"
+        },
         "system": {
             "params": {
                 "basisname": "def2-tzvp",
@@ -124,7 +131,11 @@ job_params = {
             }
         },
         "hf": {
-            "params": {"charge": 0, "multiplicity": 1, "g_convergence": 0.000001},
+            "params": {
+                "charge": 0, 
+                "multiplicity": 1, 
+                "g_convergence": 0.000001
+            },
             "outputs": {
                 "gradient": False,
                 "polarizability": False,
@@ -135,7 +146,7 @@ job_params = {
     "resources": {"gpu_type": gpu_type},
 }
 
-# add metadata only if environment variables exist
+# Add metadata only if environment variables exist
 metadata = {}
 workflow_timeout = os.getenv("PM_WORKFLOW_TIMEOUT")
 task_timeout = os.getenv("PM_TASK_TIMEOUT")
@@ -148,13 +159,13 @@ if metadata:
     job_params["metadata"] = metadata
 
 
-# submit a SPC workflow using the above configuration
+# Submit a SPC workflow using the above configuration
 payload = job_params
 jobname = payload["name"]
-response = client.post("/v0/workflows", json=payload)
+response = client.post("/v0/workflows", json=payload).json()
 with open(os.path.join(foldername, f"{jobname}_submitted.json"), "w") as fp:
-    fp.write(json.dumps(response.json()))
-workflow_id = response.json()["id"]
+    fp.write(json.dumps(response))
+workflow_id = response["id"]
 print(f"Workflow {jobname} submitted with id: {workflow_id}")
 
 # Wait for the workflow to finish
@@ -165,23 +176,24 @@ workflow = wait_for_workflows_to_complete(
     timeout=3600,
 )[workflow_id]
 
-# Get the status and Wall-clock time:
+# Get the status and elapsed time
 response = client.get(f"v0/workflows/{workflow_id}").json()
 with open(os.path.join(foldername, f"{jobname}_status.json"), "w") as fp:
     fp.write(json.dumps(response))
-name = response["name"]
-timetaken = response["duration_seconds"]
+elapsed_time = response["duration_seconds"]
 print(f"Workflow {jobname} completed with status: {workflow['status']}")
-print(f"Workflow completed in {timetaken:.2f}s")
+print(f"Workflow completed in {elapsed_time:.2f}s")
 
-# Extract and print the energy contained in the numeric results:
+# Obtain the numeric results
 response = client.get(f"/v0/workflows/{workflow_id}/results").json()
 with open(os.path.join(foldername, f"{jobname}_results.json"), "w") as fp:
     fp.write(json.dumps(response))
+
+# Extract and print the energy contained in the numeric results
 energy = response["results"]["rhf"]["energy"]
 print(f"Energy (Hartrees) = {energy}")
 
-# Download results:
+# Download results
 response = client.get(
     f"/v0/workflows/{workflow_id}/results/download", follow_redirects=True
 )

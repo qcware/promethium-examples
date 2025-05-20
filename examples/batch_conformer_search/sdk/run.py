@@ -58,7 +58,7 @@ job_params = {
             },
         ],
     },
-    "resources": {"gpu_type": "v100"},
+    "resources": {"gpu_type": gpu_type},
 }
 
 # Optional coarse DFT filter:
