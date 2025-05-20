@@ -36,7 +36,7 @@ if not os.path.exists(foldername):
 # Molecule: Nemorexant
 input_mol = base64encode("CC1=C(C=CC2=C1N=C(N2)C3(CCCN3C(=O)C4=C(C=CC(=C4)OC)N5N=CC=N5)C)Cl")
 
-# Should we add a seconf fine DFT filter?
+# Should we add a second fine DFT filter?
 fine_dft = True
 
 # CS (Conformer Search) workflow configuration

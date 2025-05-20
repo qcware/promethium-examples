@@ -44,7 +44,7 @@ client = httpx.Client(base_url=base_url, headers=headers)
 input_mol = base64.b64encode(b"CC1=C(C=CC2=C1N=C(N2)C3(CCCN3C(=O)C4=C(C=CC(=C4)OC)N5N=CC=N5)C)Cl")
 input_mol = input_mol.decode("utf-8")
 
-# Should we add a seconf fine DFT filter?
+# Should we add a second fine DFT filter?
 fine_dft = True
 
 # CS (Conformer Search) workflow configuration
