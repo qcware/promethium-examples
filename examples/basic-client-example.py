@@ -1,14 +1,14 @@
 import time
 from uuid import UUID
 
-from pydantic import UUID4
-
 from promethium_sdk.models import (
     Workflow,
     WorkflowKind,
     WorkflowResult,
     WorkflowStatus,
     CreateGeometryOptimizationWorkflowRequest,
+    ListFileMetadataParams,
+    ListWorkflowParams,
 )
 from promethium_sdk.client import PromethiumClient
 
@@ -16,28 +16,23 @@ from promethium_sdk.client import PromethiumClient
 prom = PromethiumClient()
 
 # List files:
-file_list = []
-for page in prom.files.list(size=50):
-    file_list.extend(page)
+file_list = prom.files.list(ListFileMetadataParams(size=50)).items
 
 # Example file UUID:
-file_id = UUID("4cc9d63a-8888-4c9b-b7ec-f507ded24c9d")
+file_id = file_list[0].id
 
-# File metadata:
+# File metadata and contents:
 meta = prom.files.metadata(file_id)
+contents = prom.files.download(file_id)
 
-benzaldehyde = prom.files.download(file_id)
-
-# Iterated list:
-ts_list = []
-for page in prom.workflows.list(kind=WorkflowKind.TorsionScan, size=50):
-    ts_list.extend(page)
+# List of torsion scan workflows:
+ts_list = prom.workflows.list(ListWorkflowParams(kind=[WorkflowKind.TorsionScan], size=50)).items
 
 # List a selection of geometry optimization workflows:
-go_list = prom.workflows.list(kind=WorkflowKind.GeometryOptimization, page=1, size=20)
+go_list = prom.workflows.list(ListWorkflowParams(kind=[WorkflowKind.GeometryOptimization], page=1, size=20)).items
 
 # Pick a workflow:
-workflow_id = UUID("27c5a58a-5689-4ab3-a2f7-9d4a4a49134f")
+workflow_id = go_list[0].id
 
 # Grab details of one workflow:
 workflow: Workflow = prom.workflows.get(id=workflow_id)
@@ -46,17 +41,18 @@ workflow: Workflow = prom.workflows.get(id=workflow_id)
 workflow_result: WorkflowResult = prom.workflows.results(id=workflow_id)
 
 # Download results of one workflow (as a zip file) to the current directory:
-with open(f"example-results.zip", "wb") as fp:
+with open("example-results.zip", "wb") as fp:
     fp.write(prom.workflows.download(id=workflow_id))
 
-# Submit a workflow:
+# Submit a workflow (replace ID with molecule):
+molecule_file_id = UUID("4cc9d63a-8888-4c9b-b7ec-f507ded24c9d")
 config = {
     "name": "client-example-geometry-optimization",
     "version": "v1",
     "kind": "GeometryOptimization",
     "parameters": {
         "molecule": {
-            "id": str(file_id),
+            "id": str(molecule_file_id),
         },
         "system": {
             "params": {
@@ -97,7 +93,6 @@ elif status == WorkflowStatus.FAILED:
     print("Workflow failed")
 else:
     print(f"Workflow state: {status}")
-
 
 # Grab the numeric results of the workflow:
 go_result = prom.workflows.results(id=go_workflow.id)
