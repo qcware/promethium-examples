@@ -4,9 +4,9 @@ from promethium_sdk.client import PromethiumClient
 from promethium_sdk.models import (
     CreateInteractionEnergyCalculationWorkflowRequest,
 )
-from promethium_sdk.utils import base64encode
 
-KCAL_PER_MOL_PER_HARTREE = 627.5095
+# This requires an SDK version >= 0.4.7 for the conversion constant.
+from promethium_sdk.utils import base64encode, KCAL_PER_MOL_PER_HARTREE
 
 foldername = "output"
 gpu_type = os.getenv("PM_GPU_TYPE", "a100")

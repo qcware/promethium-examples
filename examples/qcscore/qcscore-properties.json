@@ -1,0 +1,50 @@
+{
+    "protein": {
+        "base64data": "",
+        "filetype": "pdb"
+    },
+    "complex_settings": {
+        "ligand_name": "LIG",
+        "mandatory_residues": [],
+        "cofactor_charges": [],
+        "qm_mm_optimize": true,
+        "compute_strain_correction": false
+    },
+    "qm_mm_optimization": {
+        "system": {
+            "params": {
+                "basisname": "minix",
+                "methodname": "hf-3c",
+                "threshold_pq": 1e-12
+            }
+        },
+        "hf": {
+            "params": {
+                "g_convergence": 0.000001,
+                "print_level": 2
+            }
+        },
+        "optimization": {
+            "params": {
+                "g_convergence": 0.0025
+            }
+        },
+        "protein_constraint_type": "terminal_atoms"
+    },
+    "scoring": {
+        "system": {
+            "params": {
+                "basisname": "def2-svp",
+                "methodname": "wb97x-d3",
+                "pcm_epsilon": 80.4,
+                "threshold_pq": 1e-12
+            }
+        },
+        "hf": {
+            "params": {
+                "g_convergence": 0.000001,
+                "maxiter": 250
+            }
+        }
+    }
+}
