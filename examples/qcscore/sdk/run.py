@@ -22,7 +22,7 @@ from promethium_sdk.models import (
     WorkflowKind,
 )
 
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 
 def extract_ligand_name(ligand_sdf: str) -> str:
