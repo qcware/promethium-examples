@@ -16,7 +16,7 @@ from promethium_sdk.models import (
 # Set to high memory GPUs so less chance of job crashing due to insufficient memory
 gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
-foldername = "ionized_molecules"
+foldername = "output"
 os.makedirs(foldername, exist_ok=True)
 
 prom = PromethiumClient()
