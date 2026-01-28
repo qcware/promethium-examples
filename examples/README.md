@@ -3,7 +3,7 @@
 * [Getting_Started](Getting_Started) Examples showing how to run basic workflows.
 * [batch_conformer_search](batch_conformer_search) Example showing how to run a batch of conformer searches over different SMILES strings.
 * [custom_conformer_search](custom_conformer_search) Example showing how to run a customized conformer search using 3 stages of DFT filters at different levels of theory.
-* [excited_states](excited_states) Example comparing the results of computing excited states with CIS and RPA methods.
+* [excited_states](excited_states) Examples comparing the results of computing excited states with CIS and RPA methods, and working with ionization states.
 * [fsapt](fsapt) Examples showing how to run F-SAPT calculations via the Promethium API.
 * [hessian_timings](hessian_timings) Example showing a geometry optimization + frequency calculation with the `print_hessian_timings` flag set to `True`.
 * [interaction_energy](interaction_energy) Example showing how to run an Interaction Energy workflow via the Promethium API.
