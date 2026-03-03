@@ -13,6 +13,7 @@
 * [results_parsing](results_parsing) Example showing extracting the results ZIP file and loading artifacts.
 * [scf_properties](scf_properties) Examples showing how to work with SCF properties.
 * [sequential_GO_to_SPC](sequential_GO_to_SPC) Example showing a geometry optimization with B3LYP/def2-SVP and a single point on the optimized structure with B3LYP/def2-TZVP.
+* [torsion_scan](torsion_scan) Example for running a batch of torsion scan workflows over different molecule files.
 * [ts_endpoints_demo](ts_endpoint_demo) This example takes reactant and product structures from the same paper as above and runs a TS optimization from endpoints.
 * [ts_opt_demo](ts_opt_demo) This example takes a transition state structure from the supplemental material of a [paper](https://pubs.acs.org/doi/10.1021/ja4034439) and runs a transition state optimization on it.
 * [uhf_broken_symmetry](uhf_broken_symmetry) This example shows a geometry optimization using a spin broken UHF wave function.

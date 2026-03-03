@@ -1,0 +1,76 @@
+{
+    "name": "molecule",
+    "kind": "TorsionScan",
+    "parameters": {
+        "system": {
+            "params": {
+                "basisname": "def2-svp",
+                "methodname": "wb97x-d3",
+                "xc_grid_scheme": "SG1"
+            }
+        },
+        "xc_builder": {
+            "params": {}
+        },
+        "jk_builder": {
+            "type": "core_dfjk",
+            "params": {}
+        },
+        "est": {
+            "params": {}
+        },
+        "hf": {
+            "params": {
+                "charge": 0,
+                "multiplicity": 1,
+                "maxiter": 100,
+                "g_convergence": 0.000001,
+                "diis_max_nvector": 6
+            },
+            "outputs": {
+                "gradient": false,
+                "polarizability": false,
+                "dipole_derivative": false
+            }
+        },
+        "pes": {
+            "params": {
+                "coordinate_system_name": "redundant"
+            }
+        },
+        "optimization": {
+            "params": {
+                "g_convergence": 0.00045,
+                "maxiter": 1000
+            }
+        },
+        "torsion": {
+            "constraint": {
+                "params": {
+                    "atomA": 0,
+                    "atomB": 1,
+                    "atomC": 2,
+                    "atomD": 3
+                }
+            },
+            "interpolation": {
+                "params": {
+                    "nbeads": 20,
+                    "dt": 0.01,
+                    "integrator": "rk45",
+                    "parameter_exponent": 3,
+                    "rk_thresh": 0.001
+                }
+            }
+        },
+        "molecule": {
+            "filetype": "xyz",
+            "base64data": ""
+        }
+    },
+    "resources": {
+        "gpu_type": "a100",
+        "gpu_count": 1
+    },
+    "version": "v1"
+}
