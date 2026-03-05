@@ -3,14 +3,19 @@
         "base64data": "",
         "filetype": "pdb"
     },
+    "protein_cutout": {
+        "base64data": "",
+        "filetype": "pdb"
+    },
     "complex_settings": {
         "ligand_name": "LIG",
         "mandatory_residues": [],
         "cofactor_charges": [],
-        "qm_mm_optimize": true,
+        "optimize": true,
         "compute_strain_correction": false
     },
-    "qm_mm_optimization": {
+    "complex_optimization": {
+        "type": "qm-mm",
         "system": {
             "params": {
                 "basisname": "minix",
