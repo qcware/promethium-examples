@@ -44,6 +44,7 @@ Commands:
   config (cfg)        Configure the Promethium CLI.
   files (fs)          Manage your files.
   preparation (prep)  Manage molecule preparation.
+  projects (pr)       Manage Promethium projects.
   workflows (wf)      Manage Promethium workflows.
 ```
 
