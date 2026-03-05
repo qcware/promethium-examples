@@ -5,7 +5,7 @@ import pathlib
 from promethium_sdk.utils import base64encode, KCAL_PER_MOL_PER_HARTREE
 from promethium_sdk.client import PromethiumClient
 
-# This requires an SDK version >= 0.4.7 for QCScore projects support.
+# This requires an SDK version >= 0.4.8 for the expected QCScore project models.
 from promethium_sdk.models import (
     CreateFragmentedInteractionEnergyRequest,
     CreateQuantumChemicalScoringProjectRequest,
@@ -119,6 +119,7 @@ with open(os.path.join(molecules_dir, "qcscore-properties.json"), "r") as f:
     project_properties_json = json.load(f)
 
 project_properties_json["protein"]["base64data"] = protein_base64data
+project_properties_json["protein_cutout"]["base64data"] = cutout.protein_pdb_base64
 project_properties_json["complex_settings"]["mandatory_residues"] = protein_residues
 project_properties = QuantumChemicalScoringProjectProperties(**project_properties_json)
 
