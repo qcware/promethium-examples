@@ -76,7 +76,7 @@ config = {
             "outputs": {"gradient": False, "vibrational_frequencies": True},
         },
     },
-    "resources": {"gpu_type": "a100"},
+    "resources": {"gpu_type": "a100-80gb"},
 }
 payload = CreateGeometryOptimizationWorkflowRequest(**config)
 go_workflow = prom.workflows.submit(payload)

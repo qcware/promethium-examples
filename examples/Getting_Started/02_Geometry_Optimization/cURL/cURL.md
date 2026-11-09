@@ -50,6 +50,6 @@ curl --location 'https://api.promethium.qcware.com/v0/workflows' \
             }
         }
     },
-    "resources": {"gpu_type": "a100"}
+    "resources": {"gpu_type": "a100-80gb"}
 }'
 ```

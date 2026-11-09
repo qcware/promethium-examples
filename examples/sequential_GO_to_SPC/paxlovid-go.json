@@ -32,5 +32,5 @@
             "outputs": {"gradient": false, "vibrational_frequencies": false}
         }
     },
-    "resources": {"gpu_type": "a100"}
+    "resources": {"gpu_type": "a100-80gb"}
 }

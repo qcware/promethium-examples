@@ -14,7 +14,7 @@ from promethium_sdk.utils import (
 # with slightly more than that in total GPU time.
 
 foldername = "output"
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 # Should we add a coarse DFT filter?
 coarse_dft = True
