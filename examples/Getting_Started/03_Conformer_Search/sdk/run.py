@@ -25,7 +25,7 @@ from promethium_sdk.utils import (
 #       - Elapsed time: <15 min
 
 # Specify GPU resource type
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 # Specify output folder
 foldername = "output"

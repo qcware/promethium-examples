@@ -11,7 +11,7 @@ from promethium_sdk.models import (
 )
 
 foldername = "output"
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)

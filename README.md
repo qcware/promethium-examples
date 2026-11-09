@@ -89,7 +89,7 @@ After executing, you should see the response, containing the id of the workflow.
   "duration_seconds": 0.0,
   "parameters": { ... }, # omitted for brevity
   "resources": {
-    "gpu_type": "a100",
+    "gpu_type": "a100-80gb",
     "gpu_count": 1
   },
   "metadata": null

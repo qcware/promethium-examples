@@ -18,7 +18,7 @@ from promethium_sdk.utils import BYTES_PER_GB, wait_for_workflows_to_complete
 
 # Specify API base URL and GPU resource type
 base_url = os.getenv("PM_API_BASE_URL", "https://api.promethium.qcware.com")
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 # Specify output folder
 foldername = "output"

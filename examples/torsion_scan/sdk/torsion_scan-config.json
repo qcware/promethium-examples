@@ -69,7 +69,7 @@
         }
     },
     "resources": {
-        "gpu_type": "a100",
+        "gpu_type": "a100-80gb",
         "gpu_count": 1
     },
     "version": "v1"

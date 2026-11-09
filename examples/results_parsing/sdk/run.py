@@ -11,7 +11,7 @@ from promethium_sdk.models import (
     CreateGeometryOptimizationWorkflowRequest,
 )
 
-GPU_TYPE = "a100"
+GPU_TYPE = "a100-80gb"
 INPUT_FOLDER = pathlib.Path(__file__).parent.resolve()
 OUTPUT_FOLDER = "output"
 

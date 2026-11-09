@@ -9,7 +9,7 @@ from promethium_sdk.models import (
 from promethium_sdk.utils import base64encode, KCAL_PER_MOL_PER_HARTREE
 
 foldername = "output"
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)

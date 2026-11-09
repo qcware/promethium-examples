@@ -93,5 +93,5 @@
             }
         ]
     },
-    "resources": {"gpu_type": "a100"}
+    "resources": {"gpu_type": "a100-80gb"}
 }

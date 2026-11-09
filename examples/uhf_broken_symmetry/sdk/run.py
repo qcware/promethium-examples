@@ -13,7 +13,7 @@ from promethium_sdk.models import (
 # https://github.com/qcware/promethium-examples/tree/main#configuring-your-api-credentials
 
 foldername = "output"
-gpu_type = os.getenv("PM_GPU_TYPE", "a100")
+gpu_type = os.getenv("PM_GPU_TYPE", "a100-80gb")
 
 if not os.path.exists(foldername):
     os.makedirs(foldername)
